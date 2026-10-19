@@ -28,14 +28,14 @@ For this custom-directory method, run `bun run examples:custom` and import the m
 
 ## Option 2: install the release package
 
-The GitHub release includes a compiled `n8n-nodes-vej-0.3.0.tgz`; building locally is optional. On the n8n host, as the account owning the n8n data directory:
+The GitHub release includes a compiled `n8n-nodes-vej-0.3.1.tgz`; building locally is optional. On the n8n host, as the account owning the n8n data directory:
 
 ```bash
 mkdir -p ~/.n8n/nodes
 cd ~/.n8n/nodes
 test -f package.json || printf '{"private":true}\n' > package.json
 bun add --ignore-scripts \
-  https://github.com/LodeKennes/vej-n8n-node/releases/download/v0.3.0/n8n-nodes-vej-0.3.0.tgz
+  https://github.com/LodeKennes/vej-n8n-node/releases/download/v0.3.1/n8n-nodes-vej-0.3.1.tgz
 ```
 
 Restart n8n. Community package loading must be enabled; if your deployment disables it with `N8N_COMMUNITY_PACKAGES_ENABLED=false`, use the custom-directory method instead. Install in the data directory used by the n8n process, not a different user's home. Choose one installation method so the same node is not loaded twice.
@@ -73,9 +73,9 @@ Download a JSON file from [examples](../examples/README.md), then use n8n's **Im
 
 ## Upgrade from v0.1.0
 
-Install the v0.3.0 tarball using the same method, then restart n8n. Existing Vej nodes retain node version 1 and their saved JSON behavior. Add a new Vej node to use version 2's form builder. The numbered examples now target version 2. Advanced JSON remains available as an input method on version 2 for full or bulk payloads.
+Install the v0.3.1 tarball using the same method, then restart n8n. Existing Vej nodes retain node version 1 and their saved JSON behavior. Add a new Vej node to use version 2's form builder. The numbered examples now target version 2. Advanced JSON remains available as an input method on version 2 for full or bulk payloads.
 
-Version 0.3.0 uses declarative REST routing for both node versions. Version 2 adds deletion confirmations and optional Simplify/AI-tool output controls for larger responses. Raw output remains the default, so existing form workflows retain full responses. Version 1 retains its empty deletion response.
+Version 0.3.1 uses declarative REST routing for both node versions. Version 2 adds deletion confirmations and optional Simplify/AI-tool output controls for larger responses. Raw output remains the default, so existing form workflows retain full responses. Version 1 retains its empty deletion response.
 
 ## n8n Cloud
 

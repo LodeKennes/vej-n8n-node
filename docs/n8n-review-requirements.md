@@ -51,7 +51,7 @@ exception. Programmatic triggers can coexist with declarative actions.
 
 Initial inspection found `execute()` in `nodes/Vej/Vej.node.ts`. Its per-item
 REST request construction and light versioning did not establish a documented
-exception. The 0.3.0 candidate replaces it with declarative request/response hooks;
+exception. The 0.3.1 candidate replaces it with declarative request/response hooks;
 the implementation validation record covers resulting behavior in n8n.
 Public documentation does not state that every programmatic action is forbidden
 or that a scanner pass grants an exception.
@@ -74,7 +74,7 @@ The UI must conform to the [UX guidelines](https://docs.n8n.io/connect/create-no
   simple examples in placeholders.
 
 Vej's credential API key has `password: true`. Initial inspection found title-case
-action labels and no Simplify/Output control. The 0.3.0 candidate adds sentence-case
+action labels and no Simplify/Output control. The 0.3.1 candidate adds sentence-case
 actions, version 2 deletion confirmations, and context-specific Simplify/Output
 controls for larger Beta responses. Raw remains the default. These changes need
 the implementation's validation evidence; research alone does not establish UI correctness.
@@ -125,7 +125,7 @@ npx @n8n/scan-community-package n8n-nodes-vej
 For a reproducible post-publication check, pin both versions, for example:
 
 ```sh
-npx --yes @n8n/scan-community-package@0.39.0 n8n-nodes-vej@0.3.0
+npx --yes @n8n/scan-community-package@0.39.0 n8n-nodes-vej@0.3.1
 ```
 
 **Observed implementation, 0.39.0:** the CLI accepts a registry

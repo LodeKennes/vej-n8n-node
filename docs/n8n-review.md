@@ -1,6 +1,6 @@
 # Vej submission and reviewer guide
 
-Prepared for **n8n-nodes-vej 0.3.0**, checked 2026-10-19. This is a submission kit, not a claim of n8n verification. The package is prepared locally; **npm publication, registry/provenance verification, reviewer service access, and Creator Portal submission remain pending**.
+Prepared for **n8n-nodes-vej 0.3.1**, checked 2026-10-19. This is a submission kit, not a claim of n8n verification. The package is prepared locally; **npm publication, registry/provenance verification, reviewer service access, and Creator Portal submission remain pending**.
 
 ## Package identity and public links
 
@@ -8,10 +8,10 @@ Prepared for **n8n-nodes-vej 0.3.0**, checked 2026-10-19. This is a submission k
 | --- | --- |
 | Service / node name | Vej |
 | npm package | `n8n-nodes-vej` |
-| Candidate version | `0.3.0` |
+| Candidate version | `0.3.1` |
 | Repository | https://github.com/LodeKennes/vej-n8n-node |
-| Candidate source | https://github.com/LodeKennes/vej-n8n-node/tree/v0.3.0 |
-| Release | https://github.com/LodeKennes/vej-n8n-node/releases/tag/v0.3.0 |
+| Candidate source | https://github.com/LodeKennes/vej-n8n-node/tree/v0.3.1 |
+| Release | https://github.com/LodeKennes/vej-n8n-node/releases/tag/v0.3.1 |
 | npm listing, after publication | https://www.npmjs.com/package/n8n-nodes-vej |
 | Service website | https://itsvej.com/ |
 | Service account/access | https://app.itsvej.com/ |
@@ -133,7 +133,7 @@ That full scan requires npm metadata/provenance, fetches the public attested sou
 ## Final maintainer steps
 
 - [ ] Confirm npm account ownership/public maintainer identity and configure initial granular-token or trusted publishing authority in GitHub/npm. No npm credentials or GitHub publishing secret were available during preparation.
-- [ ] Dispatch **Publish to npm** from `v0.3.0`: `gh workflow run publish.yml --repo LodeKennes/vej-n8n-node --ref v0.3.0`. This makes a public npm publication; a GitHub release alone does not.
+- [ ] Dispatch **Publish to npm** from `v0.3.1`: `gh workflow run publish.yml --repo LodeKennes/vej-n8n-node --ref v0.3.1`. This makes a public npm publication; a GitHub release alone does not.
 - [ ] Confirm the workflow's registry scan passes, the npm provenance source matches the release commit, and package/repository links and maintainer identity are correct. Record the actual npm version and successful workflow URL.
 - [ ] Prepare and test dedicated reviewer service access with the scope/limitations above. No live service success has been asserted by this kit.
 - [ ] Sign in at https://creators.n8n.io/nodes, inspect the real submission fields, and use this identity table, listing copy, assets and reviewer notes. Submit the published package for verification. Portal credentials and exact authenticated fields were unavailable during preparation.

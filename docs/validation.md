@@ -1,5 +1,11 @@
 # Validation record
 
+## CI portability patch v0.3.1
+
+The first 0.3.0 GitHub CI runs passed the 85 tests, build and source/artifact scanner, then failed during Docker credential import. A local reproduction with mismatched host/container UIDs produced `EACCES` creating the fixture's `.n8n` directory. The 0.3.1 smoke runner passes the invoking UID/GID to disposable containers, preserving fixture ownership without broadening permissions. It also includes bounded diagnostics on command failure.
+
+On the same db-xps-02 checkout, `bun run check` (85 tests), `bun pm pack --destination artifacts`, `bun run scan:local`, `bun run test:n8n`, and `bun run test:n8n:package` passed for the patch. Runtime behavior is unchanged; the 0.3.0 validation below applies. The `v0.3.1` tag identifies the final source and its GitHub checks provide the runner verification. Publication and Creator Portal steps remain pending.
+
 ## n8n review candidate v0.3.0
 
 Validated 2026-10-19 on **db-xps-02** (`lk-db-xps-02`), Linux x86_64, in `/home/lode/Projects/Lode/vej-n8n-node`, branch `main`, starting at `a4e831af247fed3a5f4f85bcde9b9dcf7c442378`. Checks ran on the working tree prepared for `v0.3.0`; that tag identifies the final source. The hardware and base toolchain are described below. The additional official scanner is pinned to **0.39.0** as a development dependency. TypeScript **5.9.3** is invoked explicitly through Bun; its output and the official CLI asset copier preserve the CommonJS package format.

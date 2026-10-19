@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- Run disposable n8n test containers with the invoking user's UID/GID so fixture directories work on GitHub-hosted runners as well as local machines.
+- Include bounded command diagnostics when integration fixtures fail. The node runtime is unchanged from 0.3.0.
+
 ## 0.3.0
 
 - Prepare n8n verification materials: listing copy, brand assets, reviewer walkthrough, access/scope requirements, and publication/submission checklist.

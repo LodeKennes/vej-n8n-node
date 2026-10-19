@@ -154,6 +154,11 @@ const base = [
 	'--rm',
 	'--network',
 	'host',
+	// GitHub's runner UID differs from the image's node user. Keep mounted
+	// fixture data owned by the invoking user without broadening permissions.
+	...(process.getuid && process.getgid
+		? ['--user', `${process.getuid()}:${process.getgid()}`]
+		: []),
 	...(!packaged && !cloud
 		? [
 				'--mount',
@@ -184,7 +189,10 @@ async function command(args: string[], file: string) {
 		child.exited,
 	]);
 	await Bun.write(`${directory}/${file}.log`, stdout + stderr);
-	if (code !== 0) throw new Error(`${args[0]} failed (${code}); inspect ${directory}/${file}.log`);
+	if (code !== 0)
+		throw new Error(
+			`${args[0]} failed (${code}); inspect ${directory}/${file}.log\n${(stderr || stdout).slice(-4000)}`,
+		);
 	return stdout;
 }
 try {
