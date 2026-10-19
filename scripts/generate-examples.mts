@@ -1,4 +1,5 @@
-import { operations, presetFor } from '../nodes/Vej/operations';
+import { operations } from '../nodes/Vej/operations';
+import { formDefaults } from '../nodes/Vej/forms';
 
 const custom = Bun.argv.includes('--custom');
 const directory = custom ? 'artifacts/custom-examples' : 'examples';
@@ -47,7 +48,8 @@ for (const [filename, resource, value] of examples) {
 		? {
 				resource,
 				operation: value,
-				input: JSON.stringify(presetFor(operation), null, 2),
+				inputMode: 'form',
+				...formDefaults(operation),
 				timeout: 60000,
 			}
 		: {
@@ -62,24 +64,20 @@ for (const [filename, resource, value] of examples) {
 						: value === 'score'
 							? 'How complete is the request for review?'
 							: 'Which queue should receive this request?',
-				choices: JSON.stringify(
-					{
-						replacement: 'Review a replacement request',
-						refund: 'Review a refund request',
-						other: 'Ask a person for more information',
-					},
-					null,
-					2,
-				),
-				levels: JSON.stringify(
-					[
-						'Missing the issue and item',
-						'Has the issue but needs order details',
-						'Contains all details needed for review',
+				outcomeRows: {
+					entries: [
+						{ name: 'replacement', description: 'Review a replacement request' },
+						{ name: 'refund', description: 'Review a refund request' },
+						{ name: 'other', description: 'Ask a person for more information' },
 					],
-					null,
-					2,
-				),
+				},
+				levelRows: {
+					entries: [
+						{ description: 'Missing the issue and item' },
+						{ description: 'Has the issue but needs order details' },
+						{ description: 'Contains all details needed for review' },
+					],
+				},
 				timeout: 60000,
 			};
 	const workflow = {
@@ -98,7 +96,7 @@ for (const [filename, resource, value] of examples) {
 				id: 'vej',
 				name: operation.name,
 				type: nodeType,
-				typeVersion: 1,
+				typeVersion: 2,
 				position: [520, 300],
 				parameters,
 				notes: note,
@@ -118,7 +116,7 @@ conversation.nodes.push({
 	id: 'append',
 	name: 'Append a message',
 	type: nodeType,
-	typeVersion: 1,
+	typeVersion: 2,
 	position: [820, 300],
 	retryOnFail: false,
 	parameters: {
@@ -126,8 +124,12 @@ conversation.nodes.push({
 		operation: 'append',
 		recordId: '={{ $json.id }}',
 		timeout: 60000,
-		input:
-			'={{ { operation: "event", expected_seq: $json.seq, event: "Customer: The lamp arrived broken. Please send a replacement.", questions: { replacement: { type: "noul", statement: "The customer requests a replacement." } } } }}',
+		inputMode: 'form',
+		eventSequence: '={{ $json.seq }}',
+		event: 'Customer: The lamp arrived broken. Please send a replacement.',
+		questionBuilder: {
+			noul: [{ id: 'replacement', prompt: 'The customer requests a replacement.' }],
+		},
 	},
 	notes:
 		'Select your Vej credential. Uses the create result ID and sequence; this action advances the sequence.',

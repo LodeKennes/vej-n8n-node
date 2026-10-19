@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Label a Document",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,18 @@
       "parameters": {
         "resource": "workflow",
         "operation": "annotate",
-        "input": "{\n  \"document\": \"Switch off the machine before opening the cover.\\nWrite the service date in the log.\",\n  \"segment\": \"line\",\n  \"questions\": {\n    \"safety\": {\n      \"type\": \"noul\",\n      \"statement\": \"This segment contains a safety instruction.\"\n    }\n  }\n}",
+        "inputMode": "form",
+        "document": "Switch off the machine before opening the cover.\nWrite the service date in the log.",
+        "segmentation": "line",
+        "segments": {},
+        "questionBuilder": {
+          "noul": [
+            {
+              "id": "safety",
+              "prompt": "This segment contains a safety instruction."
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.",

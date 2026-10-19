@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-vej",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "State in, probabilities out. Native decisions and all 11 Vej Beta workflows for n8n.",
 	"license": "MIT",
 	"homepage": "https://github.com/LodeKennes/vej-n8n-node#readme",
@@ -43,7 +43,9 @@
 		"examples:custom": "bun run scripts/generate-examples.mts --custom",
 		"brand:build": "bun run scripts/build-banner.mts",
 		"test:n8n": "bun run scripts/smoke-n8n.mts",
-		"test:n8n:package": "bun run scripts/smoke-n8n.mts --package"
+		"test:n8n:package": "bun run scripts/smoke-n8n.mts --package",
+		"test:n8n:forms": "bun run scripts/smoke-n8n.mts --forms",
+		"test:n8n:cloud": "bun run scripts/smoke-n8n.mts --cloud"
 	},
 	"files": [
 		"dist",

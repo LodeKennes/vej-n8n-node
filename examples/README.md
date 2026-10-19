@@ -2,6 +2,10 @@
 
 Import any JSON file through n8n's **Import from File**, select your **Vej API** credential on every Vej node, inspect its input, and execute manually. All examples are inactive, contain no keys, and run no downstream external actions.
 
+The 16 numbered examples use version 2 and **Form** inputs. Outcomes, questions, sources, records, and other lists are editable rows in the node; the workflow file's JSON is simply n8n's export format. Existing version 1 workflows keep working.
+
+`cloud-choice.json` uses built-in n8n nodes only and can be imported on n8n Cloud before community-node verification. Edit its **Describe the decision** fields and select a built-in Header Auth credential in **Ask Vej**. See [Cloud setup](../docs/n8n-cloud.md).
+
 - `01`–`04`: guided Choice, Noul, Score, and mixed independent native questions.
 - `05`–`15`: each of the 11 [Vej use cases](https://itsvej.com/use-cases/), with matching action names.
 - `16`: calibration fitting, which supports the risk workflow.

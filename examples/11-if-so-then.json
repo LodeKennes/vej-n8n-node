@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Ask a Conditional Question",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,43 @@
       "parameters": {
         "resource": "workflow",
         "operation": "given",
-        "input": "{\n  \"state\": \"The package arrived damaged. Please send another one.\",\n  \"first\": {\n    \"type\": \"choice\",\n    \"question\": \"What does the customer request?\",\n    \"options\": {\n      \"replacement\": \"A replacement item\",\n      \"refund\": \"Money returned\",\n      \"other\": \"Another resolution\"\n    }\n  },\n  \"first_outcome\": \"replacement\",\n  \"condition\": \"replacement\",\n  \"conditional\": {\n    \"type\": \"noul\",\n    \"statement\": \"Assuming a replacement request, the reason is damage in transit.\"\n  }\n}",
+        "inputMode": "form",
+        "context": "The package arrived damaged. Please send another one.",
+        "firstQuestion": {
+          "choice": [
+            {
+              "id": "first",
+              "prompt": "What does the customer request?",
+              "outcomeRows": {
+                "entries": [
+                  {
+                    "name": "replacement",
+                    "description": "A replacement item"
+                  },
+                  {
+                    "name": "refund",
+                    "description": "Money returned"
+                  },
+                  {
+                    "name": "other",
+                    "description": "Another resolution"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "firstOutcome": "replacement",
+        "conditionType": "choice",
+        "condition": "replacement",
+        "conditionalQuestion": {
+          "noul": [
+            {
+              "id": "conditional",
+              "prompt": "Assuming a replacement request, the reason is damage in transit."
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.",

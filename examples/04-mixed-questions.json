@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Predict Multiple Questions",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,57 @@
       "parameters": {
         "resource": "decision",
         "operation": "predict",
-        "input": "{\n  \"state\": \"The customer received the wrong item and asks for a replacement.\",\n  \"questions\": {\n    \"route\": {\n      \"type\": \"choice\",\n      \"question\": \"Where should this request go?\",\n      \"options\": {\n        \"exchange\": \"Arrange a replacement\",\n        \"refund\": \"Review a refund\",\n        \"review\": \"Ask a person for more information\"\n      }\n    },\n    \"needs_review\": {\n      \"type\": \"noul\",\n      \"statement\": \"The request needs a person to review it.\"\n    },\n    \"completeness\": {\n      \"type\": \"score\",\n      \"question\": \"How complete is the request?\",\n      \"levels\": [\n        \"Missing the item and the issue\",\n        \"Describes the issue but needs order details\",\n        \"Contains all details needed for review\"\n      ]\n    }\n  }\n}",
+        "inputMode": "form",
+        "context": "The customer received the wrong item and asks for a replacement.",
+        "questionBuilder": {
+          "choice": [
+            {
+              "id": "route",
+              "prompt": "Where should this request go?",
+              "outcomeRows": {
+                "entries": [
+                  {
+                    "name": "exchange",
+                    "description": "Arrange a replacement"
+                  },
+                  {
+                    "name": "refund",
+                    "description": "Review a refund"
+                  },
+                  {
+                    "name": "review",
+                    "description": "Ask a person for more information"
+                  }
+                ]
+              }
+            }
+          ],
+          "noul": [
+            {
+              "id": "needs_review",
+              "prompt": "The request needs a person to review it."
+            }
+          ],
+          "score": [
+            {
+              "id": "completeness",
+              "prompt": "How complete is the request?",
+              "levelRows": {
+                "entries": [
+                  {
+                    "description": "Missing the item and the issue"
+                  },
+                  {
+                    "description": "Describes the issue but needs order details"
+                  },
+                  {
+                    "description": "Contains all details needed for review"
+                  }
+                ]
+              }
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.",

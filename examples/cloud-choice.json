@@ -1,0 +1,90 @@
+{
+	"name": "Vej · Choice on n8n Cloud",
+	"active": false,
+	"nodes": [
+		{
+			"id": "manual",
+			"name": "Run example",
+			"type": "n8n-nodes-base.manualTrigger",
+			"typeVersion": 1,
+			"position": [240, 300],
+			"parameters": {}
+		},
+		{
+			"id": "fields",
+			"name": "Describe the decision",
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [480, 300],
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "state",
+							"name": "state",
+							"value": "The customer asks for a replacement for a damaged lamp.",
+							"type": "string"
+						},
+						{
+							"id": "question",
+							"name": "question",
+							"value": "Which queue should receive this request?",
+							"type": "string"
+						},
+						{
+							"id": "first-name",
+							"name": "firstOutcomeName",
+							"value": "replacement",
+							"type": "string"
+						},
+						{
+							"id": "first-description",
+							"name": "firstOutcomeDescription",
+							"value": "Review a replacement request",
+							"type": "string"
+						},
+						{
+							"id": "second-name",
+							"name": "secondOutcomeName",
+							"value": "other",
+							"type": "string"
+						},
+						{
+							"id": "second-description",
+							"name": "secondOutcomeDescription",
+							"value": "Ask a person for more information",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			}
+		},
+		{
+			"id": "request",
+			"name": "Ask Vej",
+			"type": "n8n-nodes-base.httpRequest",
+			"typeVersion": 4.2,
+			"position": [720, 300],
+			"parameters": {
+				"method": "POST",
+				"url": "https://api.itsvej.com/v1/predict",
+				"authentication": "genericCredentialType",
+				"genericAuthType": "httpHeaderAuth",
+				"sendBody": true,
+				"specifyBody": "json",
+				"jsonBody": "={{ { state: $json.state, questions: { result: { type: 'choice', question: $json.question, options: { [$json.firstOutcomeName]: $json.firstOutcomeDescription, [$json.secondOutcomeName]: $json.secondOutcomeDescription } } } } }}",
+				"options": { "timeout": 60000, "redirect": { "redirect": { "followRedirects": false } } }
+			},
+			"notes": "Select a built-in Header Auth credential: Name = Authorization; Value = Bearer followed by your Vej API key. No custom node is required. Edit the previous node's fields; this request expression is preconfigured. The two outcome names must differ.",
+			"notesInFlow": true,
+			"retryOnFail": false
+		}
+	],
+	"connections": {
+		"Run example": { "main": [[{ "node": "Describe the decision", "type": "main", "index": 0 }]] },
+		"Describe the decision": { "main": [[{ "node": "Ask Vej", "type": "main", "index": 0 }]] }
+	},
+	"settings": { "executionOrder": "v1" },
+	"pinData": {}
+}

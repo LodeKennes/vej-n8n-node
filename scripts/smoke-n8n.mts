@@ -1,17 +1,34 @@
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { operations, presetFor } from '../nodes/Vej/operations';
+import { formDefaults } from '../nodes/Vej/forms';
+import packageJson from '../package.json';
 
 // This is a local transport/integration fixture, not an inference or quality test.
 const packaged = Bun.argv.includes('--package');
-const directory = resolve(packaged ? 'artifacts/n8n-smoke-package' : 'artifacts/n8n-smoke');
+const cloud = Bun.argv.includes('--cloud');
+const forms = packaged || Bun.argv.includes('--forms');
+const directory = resolve(
+	cloud
+		? 'artifacts/n8n-smoke-cloud'
+		: packaged
+			? 'artifacts/n8n-smoke-package'
+			: forms
+				? 'artifacts/n8n-smoke-forms'
+				: 'artifacts/n8n-smoke',
+);
 await mkdir(directory, { recursive: true, mode: 0o777 });
 if (packaged) {
 	const destination = `${directory}/data/.n8n/nodes`;
 	await mkdir(destination, { recursive: true });
 	await Bun.write(`${destination}/package.json`, '{"private":true}\n');
 	const install = Bun.spawn(
-		['bun', 'add', '--ignore-scripts', resolve('artifacts/n8n-nodes-vej-0.1.0.tgz')],
+		[
+			'bun',
+			'add',
+			'--ignore-scripts',
+			resolve(`artifacts/n8n-nodes-vej-${packageJson.version}.tgz`),
+		],
 		{ cwd: destination, stdout: 'pipe', stderr: 'pipe' },
 	);
 	const [stdout, stderr, code] = await Promise.all([
@@ -62,19 +79,32 @@ const nodes = operations.map((operation, index) => ({
 	id: `vej-${index}`,
 	name: `${operation.resource}-${operation.value}`,
 	type: packaged ? 'n8n-nodes-vej.vej' : 'CUSTOM.vej',
-	typeVersion: 1,
+	typeVersion: forms ? 2 : 1,
 	position: [300, index * 150],
 	credentials: { vejApi: { id: 'vej-local-fixture', name: 'Vej local fixture' } },
 	parameters: {
 		resource: operation.resource,
 		operation: operation.value,
-		...(operation.preset ? { input: JSON.stringify(presetFor(operation)) } : {}),
+		...(!forms && operation.preset ? { input: JSON.stringify(presetFor(operation)) } : {}),
 		state: 'Local fixture only.',
 		stateFormat: 'text',
 		question: 'Is this a fixture?',
 		questionId: 'result',
 		choices: '{"yes":"A fixture","no":"A live request"}',
 		levels: '["Low","High"]',
+		...(forms
+			? {
+					inputMode: 'form',
+					...formDefaults(operation),
+					outcomeRows: {
+						entries: [
+							{ name: 'yes', description: 'A fixture' },
+							{ name: 'no', description: 'A live request' },
+						],
+					},
+					levelRows: { entries: [{ description: 'Low' }, { description: 'High' }] },
+				}
+			: {}),
 		recordId: id,
 		expectedSeq: 2,
 		timeout: 60000,
@@ -90,15 +120,24 @@ const workflow = {
 	},
 	settings: { executionOrder: 'v1' },
 };
-await Bun.write(`${directory}/workflow.json`, JSON.stringify(workflow));
+const selectedWorkflow = cloud ? await Bun.file('examples/cloud-choice.json').json() : workflow;
+if (cloud) {
+	selectedWorkflow.id = 'vej-smoke-cloud-choice';
+	const request = selectedWorkflow.nodes.find((node: { id: string }) => node.id === 'request');
+	request.parameters.url = `http://127.0.0.1:${server.port}/v1/predict`;
+	request.credentials = { httpHeaderAuth: { id: 'vej-local-fixture', name: 'Vej local fixture' } };
+}
+await Bun.write(`${directory}/workflow.json`, JSON.stringify(selectedWorkflow));
 await Bun.write(
 	`${directory}/credentials.json`,
 	JSON.stringify([
 		{
 			id: 'vej-local-fixture',
 			name: 'Vej local fixture',
-			type: 'vejApi',
-			data: { baseUrl: `http://127.0.0.1:${server.port}`, apiKey: 'vej_sk_local_fixture' },
+			type: cloud ? 'httpHeaderAuth' : 'vejApi',
+			data: cloud
+				? { name: 'Authorization', value: 'Bearer vej_sk_local_fixture' }
+				: { baseUrl: `http://127.0.0.1:${server.port}`, apiKey: 'vej_sk_local_fixture' },
 		},
 	]),
 );
@@ -109,7 +148,7 @@ const base = [
 	'--rm',
 	'--network',
 	'host',
-	...(!packaged
+	...(!packaged && !cloud
 		? [
 				'--mount',
 				`type=bind,src=${resolve('dist')},dst=/opt/vej,readonly`,
@@ -145,10 +184,13 @@ async function command(args: string[], file: string) {
 try {
 	await command(['import:credentials', '--input=/fixture/credentials.json'], 'import-credentials');
 	await command(['import:workflow', '--input=/fixture/workflow.json'], 'import-workflow');
-	const output = await command(['execute', '--id=vej-smoke-all-actions', '--rawOutput'], 'execute');
-	if (received.length !== operations.length)
+	const output = await command(
+		['execute', `--id=${selectedWorkflow.id}`, '--rawOutput'],
+		'execute',
+	);
+	if (received.length !== (cloud ? 1 : operations.length))
 		throw new Error(`Expected ${operations.length} requests; received ${received.length}.`);
-	for (const operation of operations) {
+	for (const operation of cloud ? [] : operations) {
 		const path = operation.path.replace('{id}', id).replace('{api}', 'states');
 		if (
 			!received.some(
@@ -160,11 +202,27 @@ try {
 		)
 			throw new Error(`Missing actual HTTP request for ${operation.resource}/${operation.value}.`);
 	}
+	if (cloud) {
+		const request = received[0];
+		const body = request.body as {
+			state: string;
+			questions: { result: { type: string; options: object } };
+		};
+		if (
+			request.path !== '/v1/predict' ||
+			request.method !== 'POST' ||
+			body.questions.result.type !== 'choice' ||
+			Object.keys(body.questions.result.options).join(',') !== 'replacement,other'
+		)
+			throw new Error('Built-in Cloud starter did not emit the expected native Choice request.');
+	}
 	if (!output.includes('"fixture_only": true'))
 		throw new Error('Expected fixture metadata in n8n execution output.');
 	await Bun.write(`${directory}/requests.json`, JSON.stringify(received, null, 2));
 	process.stdout.write(
-		`n8n 2.43.8 executed all ${operations.length} actions through its real authenticated HTTP helper (${packaged ? 'Bun-installed tarball' : 'custom directory'}). No live inference.\n`,
+		cloud
+			? 'Built-in-node Cloud starter executed successfully in n8n 2.43.8 against the local API fixture; no custom node loaded.\n'
+			: `n8n 2.43.8 executed all ${operations.length} actions through its real authenticated HTTP helper (${packaged ? 'Bun-installed tarball' : 'custom directory'}, ${forms ? 'version 2 forms' : 'version 1 JSON'}). No live inference.\n`,
 	);
 } finally {
 	server.stop(true);

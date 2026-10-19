@@ -28,14 +28,14 @@ For this custom-directory method, run `bun run examples:custom` and import the m
 
 ## Option 2: install the release package
 
-The GitHub release includes a compiled `n8n-nodes-vej-0.1.0.tgz`; building locally is optional. On the n8n host, as the account owning the n8n data directory:
+The GitHub release includes a compiled `n8n-nodes-vej-0.2.0.tgz`; building locally is optional. On the n8n host, as the account owning the n8n data directory:
 
 ```bash
 mkdir -p ~/.n8n/nodes
 cd ~/.n8n/nodes
 test -f package.json || printf '{"private":true}\n' > package.json
 bun add --ignore-scripts \
-  https://github.com/LodeKennes/vej-n8n-node/releases/download/v0.1.0/n8n-nodes-vej-0.1.0.tgz
+  https://github.com/LodeKennes/vej-n8n-node/releases/download/v0.2.0/n8n-nodes-vej-0.2.0.tgz
 ```
 
 Restart n8n. Community package loading must be enabled; if your deployment disables it with `N8N_COMMUNITY_PACKAGES_ENABLED=false`, use the custom-directory method instead. Install in the data directory used by the n8n process, not a different user's home. Choose one installation method so the same node is not loaded twice.
@@ -71,8 +71,14 @@ For a trusted local `vej serve` instance without authentication, use its reachab
 
 Download a JSON file from [examples](../examples/README.md), then use n8n's **Import from File**. Select your Vej credential on each Vej node before running. Examples are inactive and contain no credentials. The notes on each example explain placeholders and Beta requirements.
 
+## Upgrade from v0.1.0
+
+Install the v0.2.0 tarball using the same method, then restart n8n. Existing Vej nodes retain node version 1 and their saved JSON behavior. Add a new Vej node to use version 2's form builder. The numbered examples now target version 2. Advanced JSON remains available as an input method on version 2 for full or bulk payloads.
+
 ## n8n Cloud
 
-Unverified community packages cannot be installed on n8n Cloud. Until this package is published and verified, use n8n's built-in HTTP Request node with the request formats in [operations](operations.md), or install this package on self-hosted n8n.
+Unverified community packages cannot be installed on n8n Cloud. This node needs npm publication with GitHub Actions provenance and approval through the n8n Creator Portal before an owner/admin can install it from the node picker. The publishing workflow is prepared but has not been run. [Cloud instructions and submission steps](n8n-cloud.md).
+
+To use Vej on Cloud now, import [cloud-choice.json](../examples/cloud-choice.json), edit its ordinary fields, and select a Header Auth credential. It uses only built-in nodes and does not require this package to be installed.
 
 Sources: [n8n community installation](https://docs.n8n.io/integrations/community-nodes/installation-and-management.md), [private node installation](https://docs.n8n.io/connect/create-nodes/deploy-your-node/install-private-nodes.md), [verification guidelines](https://docs.n8n.io/connect/create-nodes/build-your-node/reference/verification-guidelines.md). Checked 2026-10-19.

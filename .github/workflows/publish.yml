@@ -1,0 +1,38 @@
+name: Publish to npm
+
+# Run explicitly from a release tag after configuring npm publishing authority.
+# Repository pushes and GitHub releases do not publish to npm automatically.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - name: Require the matching release tag
+        env:
+          RELEASE_REF_TYPE: ${{ github.ref_type }}
+          RELEASE_REF_NAME: ${{ github.ref_name }}
+        run: |
+          bun -e 'const p = await Bun.file("package.json").json(); if (process.env.RELEASE_REF_TYPE !== "tag" || process.env.RELEASE_REF_NAME !== `v${p.version}`) throw new Error("Run this workflow from the matching v<package version> tag.");'
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: mkdir -p artifacts && bun pm pack --destination artifacts
+      # Bun still owns install, test, build, and pack. Its publish command cannot
+      # generate provenance, so only this registry upload uses the npm CLI.
+      - name: Publish the checked tarball with provenance
+        run: npm publish artifacts/n8n-nodes-vej-*.tgz --provenance --access public --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

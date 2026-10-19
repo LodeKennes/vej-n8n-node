@@ -10,6 +10,8 @@ import type {
 } from 'n8n-workflow';
 import { operations, presetFor, resources, retentionApis } from './operations';
 import { buildRequest, serviceUrl } from './request';
+import { formProperties } from './forms';
+import { formValues } from './form-input';
 
 const primitiveDisplay = { resource: ['decision'], operation: ['choice', 'noul', 'score'] };
 const json = (value: object) => JSON.stringify(value, null, 2);
@@ -295,7 +297,8 @@ export class Vej implements INodeType {
 		name: 'vej',
 		icon: { light: 'file:vej.svg', dark: 'file:vej.dark.svg' },
 		group: ['transform'],
-		version: 1,
+		version: [1, 2],
+		defaultVersion: 2,
 		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
 		description: 'State in, probabilities out. Native decisions and all 11 Vej Beta workflows.',
 		defaults: { name: 'Vej' },
@@ -303,7 +306,42 @@ export class Vej implements INodeType {
 		outputs: [NodeConnectionTypes.Main],
 		usableAsTool: true,
 		credentials: [{ name: 'vejApi', required: true }],
-		properties,
+		properties: [
+			...properties
+				.filter((property) => property.name !== 'timeout')
+				.flatMap((property): INodeProperties[] => {
+					if (['choices', 'levels'].includes(property.name))
+						return [
+							{
+								...property,
+								displayOptions: {
+									...property.displayOptions,
+									show: { ...property.displayOptions?.show, '@version': [1] },
+								},
+							},
+						];
+					if (property.name === 'input')
+						return [
+							{
+								...property,
+								displayOptions: {
+									...property.displayOptions,
+									show: { ...property.displayOptions?.show, '@version': [1] },
+								},
+							},
+							{
+								...property,
+								displayOptions: {
+									...property.displayOptions,
+									show: { ...property.displayOptions?.show, '@version': [2], inputMode: ['json'] },
+								},
+							},
+						];
+					return [property];
+				}),
+			...formProperties,
+			properties.find((property) => property.name === 'timeout')!,
+		],
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -317,8 +355,12 @@ export class Vej implements INodeType {
 				const operation = this.getNodeParameter('operation', i) as string;
 				let request;
 				try {
+					const get = (name: string, fallback?: unknown) =>
+						this.getNodeParameter(name, i, fallback);
+					const fields =
+						this.getNode().typeVersion >= 2 ? formValues(resource, operation, get) : {};
 					request = buildRequest(resource, operation, (name, fallback) =>
-						this.getNodeParameter(name, i, fallback),
+						Object.prototype.hasOwnProperty.call(fields, name) ? fields[name] : get(name, fallback),
 					);
 				} catch (error) {
 					throw new NodeOperationError(this.getNode(), error as Error, { itemIndex: i });

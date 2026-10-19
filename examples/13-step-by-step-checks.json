@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Run Step-by-Step Checks",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,61 @@
       "parameters": {
         "resource": "workflow",
         "operation": "flows",
-        "input": "{\n  \"state\": {\n    \"documents\": [\n      \"identity\",\n      \"lease\"\n    ]\n  },\n  \"steps\": [\n    {\n      \"id\": \"residence\",\n      \"question\": {\n        \"type\": \"noul\",\n        \"statement\": \"The documents include proof of residence.\"\n      }\n    },\n    {\n      \"id\": \"income\",\n      \"question\": {\n        \"type\": \"noul\",\n        \"statement\": \"The supplied income document supports the application.\"\n      },\n      \"depends_on\": [\n        \"residence\"\n      ],\n      \"when\": {\n        \"step\": \"residence\",\n        \"outcome\": \"true\"\n      },\n      \"requires\": [\n        \"income_document\"\n      ]\n    }\n  ],\n  \"inputs\": {},\n  \"previous_results\": [],\n  \"recompute\": false\n}",
+        "inputMode": "form",
+        "context": "{\"documents\":[\"identity\",\"lease\"]}",
+        "steps": {
+          "entries": [
+            {
+              "id": "residence",
+              "questions": {
+                "noul": [
+                  {
+                    "id": "question",
+                    "prompt": "The documents include proof of residence."
+                  }
+                ]
+              },
+              "dependsOn": {
+                "entries": []
+              },
+              "requires": {
+                "entries": []
+              },
+              "whenStep": "",
+              "whenOutcome": ""
+            },
+            {
+              "id": "income",
+              "questions": {
+                "noul": [
+                  {
+                    "id": "question",
+                    "prompt": "The supplied income document supports the application."
+                  }
+                ]
+              },
+              "dependsOn": {
+                "entries": [
+                  {
+                    "value": "residence"
+                  }
+                ]
+              },
+              "requires": {
+                "entries": [
+                  {
+                    "value": "income_document"
+                  }
+                ]
+              },
+              "whenStep": "residence",
+              "whenOutcome": "true"
+            }
+          ]
+        },
+        "flowInputs": {},
+        "recompute": false,
+        "previousResults": {},
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.",

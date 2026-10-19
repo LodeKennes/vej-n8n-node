@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Use Your Corrections",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,76 @@
       "parameters": {
         "resource": "feedback",
         "operation": "fit",
-        "input": "{\n  \"binding\": {\n    \"base_checkpoint_sha256\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n    \"parts\": {},\n    \"population_sha256\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\n    \"runtime_sha256\": \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"\n  },\n  \"target_error_rate\": 0.05,\n  \"persist\": false,\n  \"events\": [\n    {\n      \"event_id\": \"checked-1\",\n      \"group_sha256\": \"1111111111111111111111111111111111111111111111111111111111111111\",\n      \"role\": \"temperature-fit\",\n      \"outcomes\": [\n        {\n          \"key\": \"true\",\n          \"candidate_sha256\": \"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n        },\n        {\n          \"key\": \"false\",\n          \"candidate_sha256\": \"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"\n        }\n      ],\n      \"logits\": [\n        1.5,\n        -0.5\n      ],\n      \"outcome_key\": \"true\"\n    },\n    {\n      \"event_id\": \"checked-2\",\n      \"group_sha256\": \"2222222222222222222222222222222222222222222222222222222222222222\",\n      \"role\": \"risk-fit\",\n      \"outcomes\": [\n        {\n          \"key\": \"true\",\n          \"candidate_sha256\": \"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n        },\n        {\n          \"key\": \"false\",\n          \"candidate_sha256\": \"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"\n        }\n      ],\n      \"logits\": [\n        -0.5,\n        1.5\n      ],\n      \"outcome_key\": \"false\"\n    }\n  ]\n}",
+        "inputMode": "form",
+        "binding": {
+          "checkpoint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "population": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "runtime": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "rankingHead": "",
+          "rankingTemperature": ""
+        },
+        "targetError": 0.05,
+        "persist": false,
+        "feedbackEvents": {
+          "entries": [
+            {
+              "eventId": "checked-1",
+              "group": "1111111111111111111111111111111111111111111111111111111111111111",
+              "role": "temperature-fit",
+              "outcomeKey": "true",
+              "outcomes": {
+                "entries": [
+                  {
+                    "key": "true",
+                    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                  },
+                  {
+                    "key": "false",
+                    "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                  }
+                ]
+              },
+              "logits": {
+                "entries": [
+                  {
+                    "value": 1.5
+                  },
+                  {
+                    "value": -0.5
+                  }
+                ]
+              }
+            },
+            {
+              "eventId": "checked-2",
+              "group": "2222222222222222222222222222222222222222222222222222222222222222",
+              "role": "risk-fit",
+              "outcomeKey": "false",
+              "outcomes": {
+                "entries": [
+                  {
+                    "key": "true",
+                    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                  },
+                  {
+                    "key": "false",
+                    "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                  }
+                ]
+              },
+              "logits": {
+                "entries": [
+                  {
+                    "value": -0.5
+                  },
+                  {
+                    "value": 1.5
+                  }
+                ]
+              }
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.\n\nShape example only: replace placeholder digests, tokens, scores, and labels with your own data. Small calibration fixtures cannot qualify a risk target.",

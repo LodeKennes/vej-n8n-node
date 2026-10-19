@@ -4,6 +4,8 @@ The **Vej** node exposes 33 actions. Each input item produces one paired output 
 
 ## Native decisions
 
+New nodes use **version 2**, with form controls by default. Add named outcomes and rubric levels as rows. **Predict Multiple Questions** offers Choice, Statement (Noul), and Score groups with repeatable questions; every question has its own ID. State, prompts, IDs, numeric values, and descriptions accept n8n expressions. Existing version 1 workflows continue using their stored JSON inputs.
+
 All four actions call `POST /v1/predict`:
 
 | Action | Inputs | Read the result |
@@ -11,13 +13,19 @@ All four actions call `POST /v1/predict`:
 | Choose an Outcome | State, question, names mapped to descriptions | `answers.result.choice`, `answers.result.probabilities` |
 | Assess a Statement | State, statement; optional criteria and outcome descriptions | `answers.result.noul`, `answers.result.probabilities` |
 | Score Against a Rubric | State, question, ordered descriptions | `answers.result.score`, `answers.result.probabilities`, `answers.result.legend` |
-| Predict Multiple Questions | Full native JSON request | `answers.<your_question_id>` |
+| Predict Multiple Questions | State and repeatable Choice/Noul/Score questions | `answers.<your_question_id>` |
 
 The guided actions use `result` as the default question ID; changing it changes the output path. Text and structured JSON state are supported. Names/descriptions are semantic inputs. Questions are independent, and Score uses zero-based indices. The node does not reinterpret scores as probabilities or combine marginal probabilities into a joint confidence.
 
 ## Eleven Beta workflows
 
-These inputs are **only the object inside `input`**; the node adds `mode` automatically. Every action has an authored editable default. An expression may return an object directly.
+Every action has a form: sources and document text; value bins and units; typed record fields; individual checks and dependencies; conversation history, messages, and sequence; calibration cohorts and reviewed events. The node constructs the API payload for you.
+
+Calibration rows use **Reviewed Outcome Key**: enter the exact Choice outcome name, or `true` / `false` for a Noul question. The node derives the API's numeric target from the serialized outcome order, including numeric-looking Choice names.
+
+The table below documents the resulting API fields. If you choose **Advanced JSON**, provide **only the object inside `input`**; the node adds `mode` automatically. Every action has an authored editable default. An expression may return an object directly. Structured arbitrary state and bulk request variants remain available through Advanced JSON.
+
+Repeated form controls store a collection such as `{ "entries": [{ "name": "refund", "description": "Review a refund" }] }`. A question collection groups rows by kind: `{ "noul": [{ "id": "review", "prompt": "This needs review." }] }`. You can map these collections from earlier nodes rather than manually adding hundreds of calibration rows. These shapes describe expression mapping; ordinary form use does not require entering them.
 
 | Use case | Action | Endpoint | Key input fields |
 | --- | --- | --- | --- |
@@ -50,6 +58,8 @@ The caller supplies and owns the original source. No evidence selected means `no
 First explicitly enable states retention through **Retention → Set Retention Consent** as an organization administrator. The node never changes consent as a side effect of inference.
 
 Create uses `operation: create`, `expected_seq: 0`, and `history`; the response includes `id` and `seq`. Map `id` to the next node's **ID**. For append, send `operation: event`, `expected_seq` equal to the returned `seq`, and a nonempty `event`. Query omits `event` but also advances `seq`. Get Conversation Metadata reads without inference and returns the current sequence. Delete requires the expected sequence in its separate field.
+
+In the form, use **Initial History** to create, **New Message** to append, and **Expected Sequence** for append/query. The node supplies `operation` and the create sequence automatically. The conversation example maps the ID and sequence using individual expression fields.
 
 A stale sequence returns 409. After a timeout, read metadata and inspect your own event history before deciding whether to retry; a timeout does not prove that the append failed. A `rebuild_needed` response requires a new state created from caller-owned history. Retention revocation and expiry remain server-controlled.
 

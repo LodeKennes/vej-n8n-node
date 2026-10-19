@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Choose an Outcome",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -29,8 +29,35 @@
         "state": "The customer received a damaged desk lamp and asks for a replacement.",
         "questionId": "result",
         "question": "Which queue should receive this request?",
-        "choices": "{\n  \"replacement\": \"Review a replacement request\",\n  \"refund\": \"Review a refund request\",\n  \"other\": \"Ask a person for more information\"\n}",
-        "levels": "[\n  \"Missing the issue and item\",\n  \"Has the issue but needs order details\",\n  \"Contains all details needed for review\"\n]",
+        "outcomeRows": {
+          "entries": [
+            {
+              "name": "replacement",
+              "description": "Review a replacement request"
+            },
+            {
+              "name": "refund",
+              "description": "Review a refund request"
+            },
+            {
+              "name": "other",
+              "description": "Ask a person for more information"
+            }
+          ]
+        },
+        "levelRows": {
+          "entries": [
+            {
+              "description": "Missing the issue and item"
+            },
+            {
+              "description": "Has the issue but needs order details"
+            },
+            {
+              "description": "Contains all details needed for review"
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.",

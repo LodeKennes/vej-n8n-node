@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Pick the Correct Record",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,42 @@
       "parameters": {
         "resource": "workflow",
         "operation": "bind",
-        "input": "{\n  \"state\": \"The desk lamp ordered last week arrived broken.\",\n  \"question\": \"Which supplied order is referenced?\",\n  \"records\": [\n    {\n      \"id\": \"order-41\",\n      \"name\": \"lamp\",\n      \"description\": \"Desk lamp ordered last week\",\n      \"fields\": {\n        \"refunded\": false,\n        \"reviewer\": null,\n        \"refund_count\": 0\n      }\n    },\n    {\n      \"id\": \"order-12\",\n      \"name\": \"notebook\",\n      \"description\": \"Notebook ordered last month\"\n    }\n  ]\n}",
+        "inputMode": "form",
+        "context": "The desk lamp ordered last week arrived broken.",
+        "formQuestion": "Which supplied order is referenced?",
+        "records": {
+          "entries": [
+            {
+              "id": "order-41",
+              "name": "lamp",
+              "description": "Desk lamp ordered last week",
+              "fields": {
+                "entries": [
+                  {
+                    "key": "refunded",
+                    "valueType": "boolean",
+                    "booleanValue": false
+                  },
+                  {
+                    "key": "reviewer",
+                    "valueType": "null"
+                  },
+                  {
+                    "key": "refund_count",
+                    "valueType": "number",
+                    "numberValue": 0
+                  }
+                ]
+              }
+            },
+            {
+              "id": "order-12",
+              "name": "notebook",
+              "description": "Notebook ordered last month",
+              "fields": {}
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.",

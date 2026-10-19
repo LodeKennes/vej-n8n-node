@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Fit a Calibration",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,44 @@
       "parameters": {
         "resource": "calibration",
         "operation": "fit",
-        "input": "{\n  \"binding\": {\n    \"population_sha256\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"\n  },\n  \"target_error_rate\": 0.05,\n  \"persist\": false,\n  \"temperature_fit\": [\n    {\n      \"group_sha256\": \"1111111111111111111111111111111111111111111111111111111111111111\",\n      \"request\": {\n        \"state\": \"The documented public export was removed.\",\n        \"questions\": {\n          \"breaking\": {\n            \"type\": \"noul\",\n            \"statement\": \"This change breaks the public API.\"\n          }\n        }\n      },\n      \"target\": 0\n    }\n  ],\n  \"risk_fit\": [\n    {\n      \"group_sha256\": \"2222222222222222222222222222222222222222222222222222222222222222\",\n      \"request\": {\n        \"state\": \"The changelog formatting was adjusted.\",\n        \"questions\": {\n          \"breaking\": {\n            \"type\": \"noul\",\n            \"statement\": \"This change breaks the public API.\"\n          }\n        }\n      },\n      \"target\": 1\n    }\n  ]\n}",
+        "inputMode": "form",
+        "population": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "targetError": 0.05,
+        "persist": false,
+        "temperatureFit": {
+          "entries": [
+            {
+              "group": "1111111111111111111111111111111111111111111111111111111111111111",
+              "targetOutcome": "true",
+              "state": "The documented public export was removed.",
+              "questions": {
+                "noul": [
+                  {
+                    "id": "breaking",
+                    "prompt": "This change breaks the public API."
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "riskFit": {
+          "entries": [
+            {
+              "group": "2222222222222222222222222222222222222222222222222222222222222222",
+              "targetOutcome": "false",
+              "state": "The changelog formatting was adjusted.",
+              "questions": {
+                "noul": [
+                  {
+                    "id": "breaking",
+                    "prompt": "This change breaks the public API."
+                  }
+                ]
+              }
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.\n\nShape example only: replace placeholder digests, tokens, scores, and labels with your own data. Small calibration fixtures cannot qualify a risk target.",

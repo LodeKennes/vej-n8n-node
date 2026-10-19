@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Select Effort",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,17 @@
       "parameters": {
         "resource": "workflow",
         "operation": "effort",
-        "input": "{\n  \"state\": \"A proposed change updates request validation.\",\n  \"questions\": {\n    \"security\": {\n      \"type\": \"noul\",\n      \"statement\": \"This change needs a security review.\",\n      \"effort\": \"standard\"\n    }\n  }\n}",
+        "inputMode": "form",
+        "context": "A proposed change updates request validation.",
+        "questionBuilder": {
+          "noul": [
+            {
+              "id": "security",
+              "prompt": "This change needs a security review.",
+              "effort": "standard"
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.\n\nStandard executes. Fast and careful are deferred; inspect every question status.",

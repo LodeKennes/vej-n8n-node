@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Target Error Rate",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,26 @@
       "parameters": {
         "resource": "workflow",
         "operation": "risk",
-        "input": "{\n  \"binding\": {\n    \"base_checkpoint_sha256\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n    \"parts\": {},\n    \"population_sha256\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\n    \"runtime_sha256\": \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"\n  },\n  \"request\": {\n    \"state\": \"The public account endpoint was removed.\",\n    \"questions\": {\n      \"breaking\": {\n        \"type\": \"noul\",\n        \"statement\": \"This change breaks the public API.\"\n      }\n    }\n  },\n  \"calibration\": \"REPLACE_WITH_YOUR_CALIBRATION_TOKEN\"\n}",
+        "inputMode": "form",
+        "context": "The public account endpoint was removed.",
+        "questionBuilder": {
+          "noul": [
+            {
+              "id": "breaking",
+              "prompt": "This change breaks the public API."
+            }
+          ]
+        },
+        "calibrationSource": "token",
+        "calibrationToken": "REPLACE_WITH_YOUR_CALIBRATION_TOKEN",
+        "calibrationId": "",
+        "binding": {
+          "checkpoint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "population": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "runtime": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "rankingHead": "",
+          "rankingTemperature": ""
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.\n\nShape example only: replace placeholder digests, tokens, scores, and labels with your own data. Small calibration fixtures cannot qualify a risk target.",

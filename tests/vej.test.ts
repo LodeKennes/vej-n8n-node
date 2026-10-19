@@ -2,12 +2,14 @@
 import { describe, expect, test } from 'bun:test';
 import Ajv from 'ajv/dist/2020';
 import addFormats from 'ajv-formats';
-import type { IExecuteFunctions, INode, IHttpRequestOptions } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions, INode, IHttpRequestOptions } from 'n8n-workflow';
 import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 import { Vej } from '../nodes/Vej/Vej.node';
 import { VejApi } from '../credentials/VejApi.credentials';
 import { operations, presetFor, resources } from '../nodes/Vej/operations';
 import { buildRequest, jsonValue, serviceUrl } from '../nodes/Vej/request';
+import { formDefaults, fieldsFor } from '../nodes/Vej/forms';
+import { formValues } from '../nodes/Vej/form-input';
 import ga from './contracts/ga.json';
 import beta from './contracts/beta.json';
 
@@ -140,6 +142,232 @@ describe('all published use cases and lifecycle operations', () => {
 	});
 });
 
+describe('version 2 form builders', () => {
+	for (const operation of operations.filter((item) => item.preset)) {
+		test(`${operation.resource}/${operation.value} form defaults satisfy the pinned API schema`, () => {
+			expect(fieldsFor(operation).length).toBeGreaterThan(0);
+			const get = params({ ...formDefaults(operation), inputMode: 'form' });
+			const fields = formValues(operation.resource, operation.value, get);
+			const request = buildRequest(operation.resource, operation.value, (key, fallback) =>
+				key in fields ? fields[key] : get(key, fallback),
+			);
+			if (operation.mode)
+				valid('beta', schemaFor[operation.preset!], (request.body as { input: unknown }).input);
+			else
+				valid(
+					'ga',
+					operation.resource === 'batch' ? 'BatchRequest' : 'NativeRequest',
+					request.body,
+				);
+		});
+	}
+	test('outcome and rubric rows become ordered native candidate inputs', () => {
+		const options = formValues(
+			'decision',
+			'choice',
+			params({
+				outcomeRows: {
+					entries: [
+						{ name: 'refund', description: 'Return the payment' },
+						{ name: 'other', description: 'Ask for more information' },
+					],
+				},
+			}),
+		);
+		expect(options).toEqual({
+			choices: { refund: 'Return the payment', other: 'Ask for more information' },
+		});
+		expect(
+			formValues(
+				'decision',
+				'score',
+				params({ levelRows: { entries: [{ description: 'Low' }, { description: 'High' }] } }),
+			),
+		).toEqual({ levels: ['Low', 'High'] });
+		expect(() =>
+			formValues(
+				'decision',
+				'choice',
+				params({
+					outcomeRows: {
+						entries: [
+							{ name: 'same', description: 'First' },
+							{ name: 'same', description: 'Second' },
+						],
+					},
+				}),
+			),
+		).toThrow('duplicate');
+	});
+	test('record field controls preserve false, null, zero and empty strings', () => {
+		const spec = operations.find((item) => item.value === 'bind')!;
+		const defaults = formDefaults(spec);
+		const fields = formValues(
+			'workflow',
+			'bind',
+			params({
+				...defaults,
+				records: {
+					entries: [
+						{
+							id: 'r1',
+							name: 'record',
+							description: 'A supplied record',
+							fields: {
+								entries: [
+									{ key: 'enabled', valueType: 'boolean', booleanValue: false },
+									{ key: 'owner', valueType: 'null' },
+									{ key: 'count', valueType: 'number', numberValue: 0 },
+									{ key: 'note', valueType: 'text', textValue: '' },
+								],
+							},
+						},
+					],
+				},
+			}),
+		);
+		expect(((fields.input as IDataObject).records as IDataObject[])[0].fields).toEqual({
+			enabled: false,
+			owner: null,
+			count: 0,
+			note: '',
+		});
+	});
+	test('conditional boolean false remains a boolean', () => {
+		const spec = operations.find((item) => item.value === 'given')!;
+		const fields = formValues(
+			'workflow',
+			'given',
+			params({ ...formDefaults(spec), conditionType: 'false' }),
+		);
+		expect((fields.input as IDataObject).condition).toBe(false);
+	});
+	test('duplicate question IDs fail across question types', () => {
+		const spec = operations.find((item) => item.value === 'effort')!;
+		expect(() =>
+			formValues(
+				'workflow',
+				'effort',
+				params({
+					...formDefaults(spec),
+					questionBuilder: {
+						noul: [
+							{ id: 'same', prompt: 'First' },
+							{ id: 'same', prompt: 'Second' },
+						],
+					},
+				}),
+			),
+		).toThrow('duplicate');
+	});
+	test('custom document spans count Unicode code points and reject out-of-range offsets', () => {
+		const spec = operations.find((item) => item.value === 'annotate')!;
+		const defaults = { ...formDefaults(spec), document: '😀Hi', segmentation: 'custom' };
+		const fields = formValues(
+			'workflow',
+			'annotate',
+			params({ ...defaults, segments: { entries: [{ id: 'one', start: 0, end: 3 }] } }),
+		);
+		expect((fields.input as IDataObject).segments).toEqual([{ id: 'one', start: 0, end: 3 }]);
+		expect(() =>
+			formValues(
+				'workflow',
+				'annotate',
+				params({ ...defaults, segments: { entries: [{ id: 'one', start: 0, end: 4 }] } }),
+			),
+		).toThrow('code-point');
+	});
+	test('numeric estimate bins reject duplicates and descending values', () => {
+		const spec = operations.find((item) => item.value === 'estimate')!;
+		expect(() =>
+			formValues(
+				'workflow',
+				'estimate',
+				params({
+					...formDefaults(spec),
+					estimates: {
+						entries: [
+							{
+								id: 'hours',
+								question: 'How long?',
+								unit: 'hours',
+								values: { entries: [{ value: 2 }, { value: 1 }] },
+							},
+						],
+					},
+				}),
+			),
+		).toThrow('increasing');
+	});
+	test('advanced JSON passes through without evaluating hidden form controls', () => {
+		expect(formValues('workflow', 'bind', params({ inputMode: 'json' }))).toEqual({});
+	});
+	test('calibration labels follow outcome identity when numeric names reorder in JSON objects', () => {
+		const spec = operations.find(
+			(item) => item.resource === 'calibration' && item.value === 'fit',
+		)!;
+		const labeled = {
+			group: '1'.repeat(64),
+			state: 'Choose the ten outcome.',
+			targetOutcome: '10',
+			questions: {
+				choice: [
+					{
+						id: 'choice',
+						prompt: 'Which outcome applies?',
+						outcomeRows: {
+							entries: [
+								{ name: '10', description: 'Ten items' },
+								{ name: '2', description: 'Two items' },
+							],
+						},
+					},
+				],
+			},
+		};
+		const fields = formValues(
+			'calibration',
+			'fit',
+			params({ ...formDefaults(spec), temperatureFit: { entries: [labeled] } }),
+		);
+		const fit = ((fields.input as IDataObject).temperature_fit as IDataObject[])[0];
+		const question = Object.values(
+			(fit.request as IDataObject).questions as IDataObject,
+		)[0] as IDataObject;
+		expect(Object.keys(question.options as IDataObject)).toEqual(['2', '10']);
+		expect(fit.target).toBe(1);
+		valid('beta', 'RiskCalibrationInput', fields.input);
+	});
+	test('new nodes default to version 2 while version 1 remains available', () => {
+		expect(new Vej().description.version).toEqual([1, 2]);
+		expect(new Vej().description.defaultVersion).toBe(2);
+	});
+	test('version 2 execution builds requests from per-item form rows', async () => {
+		const fixture = execution(
+			[
+				{
+					resource: 'decision',
+					operation: 'choice',
+					outcomeRows: {
+						entries: [
+							{ name: 'yes', description: 'Proceed' },
+							{ name: 'no', description: 'Review' },
+						],
+					},
+				},
+			],
+			async (request) => ({ received: request.body }),
+			false,
+			2,
+		);
+		const [items] = await fixture.run();
+		expect(
+			(items[0].json.received as { questions: { result: { options: object } } }).questions.result
+				.options,
+		).toEqual({ yes: 'Proceed', no: 'Review' });
+	});
+});
+
 describe('request boundaries', () => {
 	test('preserves false, null, zero, arrays and semantic option names', () => {
 		const state = { allowed: false, owner: null, count: 0, rows: ['a', 'b'] };
@@ -255,13 +483,14 @@ function execution(
 	rows: Record<string, unknown>[],
 	reply: (request: IHttpRequestOptions) => Promise<unknown>,
 	continueOnFail = false,
+	version = 1,
 ) {
 	const requests: IHttpRequestOptions[] = [];
 	const context = {
 		getInputData: () => rows.map(() => ({ json: {} })),
 		getNodeParameter: (name: string, index: number, fallback?: unknown) =>
 			params(rows[index])(name, fallback),
-		getNode: () => node,
+		getNode: () => ({ ...node, typeVersion: version }),
 		getCredentials: async () => ({
 			baseUrl: 'https://api.itsvej.com/',
 			apiKey: 'fake-unit-test-key',

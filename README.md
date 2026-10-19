@@ -24,7 +24,9 @@ Route a request. Check a document. Match a record. Keep the probabilities.
 - **A workflow with context:** evaluate conversation history, ask conditional questions, match supplied records, and resume checks when someone supplies missing information.
 - **A review queue:** apply a fitted risk threshold, use reviewed corrections for recalibration, or inspect ranking probabilities.
 
-The package has **33 actions across eight resources**, light and dark Vej icons, credential testing, per-item expressions, paired outputs, and editable JSON examples. Every API response keeps its probabilities, statuses, metadata, and usage.
+The package has **33 actions across eight resources**, light and dark Vej icons, credential testing, per-item expressions, and paired outputs. **Build requests with forms:** add outcomes, questions, rubric levels, sources, records, segments, checks, and reviewed labels using repeatable rows. Every API response keeps its probabilities, statuses, metadata, and usage.
+
+Advanced JSON is optional for bulk data and full native payloads. Existing version 1 nodes retain their saved JSON behavior; newly added nodes use the version 2 form builder.
 
 ## All 11 use cases
 
@@ -65,7 +67,9 @@ Run the copy as the account that owns the n8n data directory, then restart your 
 2. Select **Decision → Choose an Outcome**. Map an incoming message into **State**, enter your question, and edit the outcome names/descriptions.
 3. Run the node. With the default question ID, branch on `{{ $json.answers.result.choice }}` and inspect `{{ $json.answers.result.probabilities }}`.
 
-For Beta actions, **Input (JSON)** is the mode-specific input object. The node supplies the `{ "mode": "…", "input": … }` envelope and correct route. Use n8n's expression editor to pass an object directly, for example `{{ $json.input }}`. **Predict Multiple Questions** accepts the complete native request.
+For Beta actions, leave **Input Method → Form** selected. Use **Add Source**, **Add Record**, **Add Question**, and the other row controls to assemble the request. The node adds the correct API envelope and route. **Predict Multiple Questions** has separate Choice, Noul, and Score question groups; each question keeps its own ID and outcomes.
+
+Expressions work on individual form fields, including conversation IDs and sequences. For bulk data, change **Input Method → Advanced JSON** and map an object from an earlier node. You can also map repeated collections using n8n expressions; see [operations](docs/operations.md).
 
 ![Vej's guided Choice action running in the n8n editor](assets/n8n-node.png)
 
@@ -75,7 +79,7 @@ Choice, Noul, and Score use `/v1/predict`. The 11 extended workflows use `/v1bet
 
 - **Effort:** standard executes; fast and careful are deferred. HTTP 200 can contain unavailable results. Inspect each question's status.
 - **Rankings:** Beta quality gate failed; deployments without a qualified sidecar return `ranking_unavailable`.
-- **Risk and feedback:** sample JSON illustrates the shape. Replace placeholder digests, tokens, and labels with your own data. Risk fitting requires separate cohorts and at least 500 independent risk-fit groups. Normalized probabilities and a fit do not establish a population error guarantee.
+- **Risk and feedback:** the sample form rows illustrate the shape. Replace placeholder digests, tokens, and labels with your own data. Risk fitting requires separate cohorts and at least 500 independent risk-fit groups. Normalized probabilities and a fit do not establish a population error guarantee.
 - **Conversation state:** organization retention consent is explicit. The node never enables it automatically. Append and query advance the sequence; no automatic retries are performed.
 - **Batch:** hosted execution is not currently open because approved EU storage hosts are not configured. The actions support deployments that enable them.
 - **Inputs:** the hosted Pea service is text-only. An image-capable native request can be passed through only to a separately enabled experimental deployment; it does not imply measured vision quality.
@@ -83,6 +87,12 @@ Choice, Noul, and Score use `/v1/predict`. The 11 extended workflows use `/v1bet
 Your workflow owns downstream actions. Evidence offsets count Unicode code points, and Score expectations use zero-based level indices. n8n may retain execution inputs and outputs according to its own settings, independently of Vej's retention policy.
 
 [Read Vej's current use-case status](https://itsvej.com/use-cases/).
+
+## n8n Cloud
+
+The full Vej node needs **npm publication with provenance and n8n verification** before Cloud can install it. A manual publishing workflow and [Cloud installation/submission guide](docs/n8n-cloud.md) are included; npm publication and n8n approval remain pending.
+
+For Cloud today, import [the built-in-node Choice example](examples/cloud-choice.json). Edit the ordinary fields and select a Header Auth credential; its HTTP request is preconfigured and needs no hand-written JSON.
 
 ## Development
 

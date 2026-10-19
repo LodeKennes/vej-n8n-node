@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Estimate a Number with a Range",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,37 @@
       "parameters": {
         "resource": "workflow",
         "operation": "estimate",
-        "input": "{\n  \"state\": \"A short pull request is waiting for one reviewer.\",\n  \"questions\": {\n    \"review_hours\": {\n      \"type\": \"estimate\",\n      \"question\": \"How many hours of review work remain?\",\n      \"unit\": \"hours\",\n      \"values\": [\n        0,\n        1,\n        2,\n        4,\n        8\n      ]\n    }\n  }\n}",
+        "inputMode": "form",
+        "context": "A short pull request is waiting for one reviewer.",
+        "estimates": {
+          "entries": [
+            {
+              "id": "review_hours",
+              "type": "estimate",
+              "question": "How many hours of review work remain?",
+              "unit": "hours",
+              "values": {
+                "entries": [
+                  {
+                    "value": 0
+                  },
+                  {
+                    "value": 1
+                  },
+                  {
+                    "value": 2
+                  },
+                  {
+                    "value": 4
+                  },
+                  {
+                    "value": 8
+                  }
+                ]
+              }
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.",

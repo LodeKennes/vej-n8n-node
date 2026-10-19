@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Show the Evidence",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,16 @@
       "parameters": {
         "resource": "workflow",
         "operation": "alignments",
-        "input": "{\n  \"question\": \"Returns are accepted for 14 days.\",\n  \"sources\": [\n    {\n      \"id\": \"policy\",\n      \"text\": \"Returns are accepted for 14 days. Keep your receipt for the review.\"\n    }\n  ]\n}",
+        "inputMode": "form",
+        "claim": "Returns are accepted for 14 days.",
+        "sources": {
+          "entries": [
+            {
+              "id": "policy",
+              "text": "Returns are accepted for 14 days. Keep your receipt for the review."
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.",

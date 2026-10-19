@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Rank with Probabilities",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,24 @@
       "parameters": {
         "resource": "workflow",
         "operation": "rankings",
-        "input": "{\n  \"state\": \"Errors began immediately after reducing the database connection limit.\",\n  \"question\": \"Which change should an engineer investigate first?\",\n  \"candidates\": [\n    {\n      \"id\": \"db\",\n      \"name\": \"Database limit\",\n      \"description\": \"Lower the database connection limit\"\n    },\n    {\n      \"id\": \"css\",\n      \"name\": \"Page spacing\",\n      \"description\": \"Adjust the spacing in the footer\"\n    }\n  ],\n  \"top_k\": 1\n}",
+        "inputMode": "form",
+        "context": "Errors began immediately after reducing the database connection limit.",
+        "formQuestion": "Which change should an engineer investigate first?",
+        "topK": 1,
+        "candidates": {
+          "entries": [
+            {
+              "id": "db",
+              "name": "Database limit",
+              "description": "Lower the database connection limit"
+            },
+            {
+              "id": "css",
+              "name": "Page spacing",
+              "description": "Adjust the spacing in the footer"
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.\n\nRankings quality gate failed. This example demonstrates the request contract, not validated quality.",

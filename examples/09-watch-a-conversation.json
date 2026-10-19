@@ -17,7 +17,7 @@
       "id": "vej",
       "name": "Create a Conversation",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         520,
         300
@@ -25,7 +25,16 @@
       "parameters": {
         "resource": "conversation",
         "operation": "create",
-        "input": "{\n  \"operation\": \"create\",\n  \"expected_seq\": 0,\n  \"history\": \"Customer: Can you explain the returns policy?\",\n  \"questions\": {\n    \"refund\": {\n      \"type\": \"noul\",\n      \"statement\": \"The customer is asking for a refund.\"\n    }\n  }\n}",
+        "inputMode": "form",
+        "history": "Customer: Can you explain the returns policy?",
+        "questionBuilder": {
+          "noul": [
+            {
+              "id": "refund",
+              "prompt": "The customer is asking for a refund."
+            }
+          ]
+        },
         "timeout": 60000
       },
       "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.\n\nExplicit states retention consent is required. Append and query use the returned sequence; do not enable Retry On Fail.",
@@ -36,7 +45,7 @@
       "id": "append",
       "name": "Append a message",
       "type": "n8n-nodes-vej.vej",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         820,
         300
@@ -47,7 +56,17 @@
         "operation": "append",
         "recordId": "={{ $json.id }}",
         "timeout": 60000,
-        "input": "={{ { operation: \"event\", expected_seq: $json.seq, event: \"Customer: The lamp arrived broken. Please send a replacement.\", questions: { replacement: { type: \"noul\", statement: \"The customer requests a replacement.\" } } } }}"
+        "inputMode": "form",
+        "eventSequence": "={{ $json.seq }}",
+        "event": "Customer: The lamp arrived broken. Please send a replacement.",
+        "questionBuilder": {
+          "noul": [
+            {
+              "id": "replacement",
+              "prompt": "The customer requests a replacement."
+            }
+          ]
+        }
       },
       "notes": "Select your Vej credential. Uses the create result ID and sequence; this action advances the sequence.",
       "notesInFlow": true
