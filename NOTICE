@@ -1,0 +1,23 @@
+Vej for n8n
+Copyright 2026 Lode Kennes
+
+The integration code and authored documentation/examples are MIT licensed.
+
+The supplied Vej logos/marks and Vej API request-schema test snapshots derive
+from LodeKennes/Vej, copyright 2026 Lode Kennes, under Apache License 2.0.
+An unmodified copy of that license is in assets/LICENSE-VEJ.txt. Logo geometry
+is preserved; the small reverse icon changes only its fill to Vej Light Pod.
+Vej names and marks identify the integrated service; no additional trademark
+rights are granted.
+
+Fraunces and IBM Plex Sans font files in assets/fonts are distributed under
+SIL Open Font License 1.1; their unmodified license texts are included there.
+The banner SVG embeds these fonts to preserve Vej typography.
+
+Source API revision: dedb60477c1c6b323658195ee96bc34e9e5fbe6f
+Source paths: api/openapi/v1.json and api/openapi/v1beta.json.
+Only reachable request-schema components are included in tests/contracts.
+API examples in nodes/Vej/presets.json are authored for this integration.
+
+n8n is a trademark of n8n GmbH. This package integrates with n8n; it is not
+represented as an n8n-verified community node.

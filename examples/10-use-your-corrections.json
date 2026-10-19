@@ -1,0 +1,53 @@
+{
+  "name": "Vej · Use Your Corrections",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual",
+      "name": "Run example",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "vej",
+      "name": "Use Your Corrections",
+      "type": "n8n-nodes-vej.vej",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "resource": "feedback",
+        "operation": "fit",
+        "input": "{\n  \"binding\": {\n    \"base_checkpoint_sha256\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n    \"parts\": {},\n    \"population_sha256\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\n    \"runtime_sha256\": \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"\n  },\n  \"target_error_rate\": 0.05,\n  \"persist\": false,\n  \"events\": [\n    {\n      \"event_id\": \"checked-1\",\n      \"group_sha256\": \"1111111111111111111111111111111111111111111111111111111111111111\",\n      \"role\": \"temperature-fit\",\n      \"outcomes\": [\n        {\n          \"key\": \"true\",\n          \"candidate_sha256\": \"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n        },\n        {\n          \"key\": \"false\",\n          \"candidate_sha256\": \"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"\n        }\n      ],\n      \"logits\": [\n        1.5,\n        -0.5\n      ],\n      \"outcome_key\": \"true\"\n    },\n    {\n      \"event_id\": \"checked-2\",\n      \"group_sha256\": \"2222222222222222222222222222222222222222222222222222222222222222\",\n      \"role\": \"risk-fit\",\n      \"outcomes\": [\n        {\n          \"key\": \"true\",\n          \"candidate_sha256\": \"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n        },\n        {\n          \"key\": \"false\",\n          \"candidate_sha256\": \"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"\n        }\n      ],\n      \"logits\": [\n        -0.5,\n        1.5\n      ],\n      \"outcome_key\": \"false\"\n    }\n  ]\n}",
+        "timeout": 60000
+      },
+      "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.\n\nShape example only: replace placeholder digests, tokens, scores, and labels with your own data. Small calibration fixtures cannot qualify a risk target.",
+      "notesInFlow": true,
+      "retryOnFail": false
+    }
+  ],
+  "connections": {
+    "Run example": {
+      "main": [
+        [
+          {
+            "node": "Use Your Corrections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

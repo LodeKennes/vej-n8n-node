@@ -1,0 +1,25 @@
+{
+	"node": "n8n-nodes-vej.vej",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Analytics", "Data & Storage"],
+	"resources": {
+		"primaryDocumentation": [{ "url": "https://github.com/LodeKennes/vej-n8n-node#readme" }],
+		"credentialDocumentation": [
+			{ "url": "https://github.com/LodeKennes/vej-n8n-node/blob/main/docs/installation.md" }
+		]
+	},
+	"alias": [
+		"Vej",
+		"Pea",
+		"Choice",
+		"Noul",
+		"Score",
+		"probability",
+		"classification",
+		"routing",
+		"evidence",
+		"ranking",
+		"annotation"
+	]
+}

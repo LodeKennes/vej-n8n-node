@@ -1,0 +1,53 @@
+{
+  "name": "Vej · Pick the Correct Record",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual",
+      "name": "Run example",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "vej",
+      "name": "Pick the Correct Record",
+      "type": "n8n-nodes-vej.vej",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "resource": "workflow",
+        "operation": "bind",
+        "input": "{\n  \"state\": \"The desk lamp ordered last week arrived broken.\",\n  \"question\": \"Which supplied order is referenced?\",\n  \"records\": [\n    {\n      \"id\": \"order-41\",\n      \"name\": \"lamp\",\n      \"description\": \"Desk lamp ordered last week\",\n      \"fields\": {\n        \"refunded\": false,\n        \"reviewer\": null,\n        \"refund_count\": 0\n      }\n    },\n    {\n      \"id\": \"order-12\",\n      \"name\": \"notebook\",\n      \"description\": \"Notebook ordered last month\"\n    }\n  ]\n}",
+        "timeout": 60000
+      },
+      "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.",
+      "notesInFlow": true,
+      "retryOnFail": false
+    }
+  ],
+  "connections": {
+    "Run example": {
+      "main": [
+        [
+          {
+            "node": "Pick the Correct Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

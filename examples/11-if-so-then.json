@@ -1,0 +1,53 @@
+{
+  "name": "Vej · Ask a Conditional Question",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual",
+      "name": "Run example",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "vej",
+      "name": "Ask a Conditional Question",
+      "type": "n8n-nodes-vej.vej",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "resource": "workflow",
+        "operation": "given",
+        "input": "{\n  \"state\": \"The package arrived damaged. Please send another one.\",\n  \"first\": {\n    \"type\": \"choice\",\n    \"question\": \"What does the customer request?\",\n    \"options\": {\n      \"replacement\": \"A replacement item\",\n      \"refund\": \"Money returned\",\n      \"other\": \"Another resolution\"\n    }\n  },\n  \"first_outcome\": \"replacement\",\n  \"condition\": \"replacement\",\n  \"conditional\": {\n    \"type\": \"noul\",\n    \"statement\": \"Assuming a replacement request, the reason is damage in transit.\"\n  }\n}",
+        "timeout": 60000
+      },
+      "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.",
+      "notesInFlow": true,
+      "retryOnFail": false
+    }
+  ],
+  "connections": {
+    "Run example": {
+      "main": [
+        [
+          {
+            "node": "Ask a Conditional Question",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

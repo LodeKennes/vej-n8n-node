@@ -1,0 +1,53 @@
+{
+  "name": "Vej · Estimate a Number with a Range",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual",
+      "name": "Run example",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "vej",
+      "name": "Estimate a Number with a Range",
+      "type": "n8n-nodes-vej.vej",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "resource": "workflow",
+        "operation": "estimate",
+        "input": "{\n  \"state\": \"A short pull request is waiting for one reviewer.\",\n  \"questions\": {\n    \"review_hours\": {\n      \"type\": \"estimate\",\n      \"question\": \"How many hours of review work remain?\",\n      \"unit\": \"hours\",\n      \"values\": [\n        0,\n        1,\n        2,\n        4,\n        8\n      ]\n    }\n  }\n}",
+        "timeout": 60000
+      },
+      "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.",
+      "notesInFlow": true,
+      "retryOnFail": false
+    }
+  ],
+  "connections": {
+    "Run example": {
+      "main": [
+        [
+          {
+            "node": "Estimate a Number with a Range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

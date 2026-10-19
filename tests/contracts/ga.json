@@ -1,0 +1,254 @@
+{
+  "components": {
+    "schemas": {
+      "NativeRequest": {
+        "required": [
+          "state",
+          "questions"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": {}
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ]
+          },
+          "questions": {
+            "maxProperties": 128,
+            "minProperties": 1,
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/NativeQuestion"
+            }
+          },
+          "images": {
+            "examples": [
+              [
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"
+              ],
+              [
+                {
+                  "content_type": "image/png",
+                  "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"
+                }
+              ]
+            ],
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "pattern": "^data:image/(png|jpeg|webp);base64,",
+                  "type": "string"
+                },
+                {
+                  "required": [
+                    "content_type",
+                    "base64"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "content_type": {
+                      "enum": [
+                        "image/png",
+                        "image/jpeg",
+                        "image/webp"
+                      ],
+                      "type": "string"
+                    },
+                    "base64": {
+                      "contentEncoding": "base64",
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ],
+              "description": "Each image is a base64 data URL or an object with content_type and base64, using the same format on all three realtime routes."
+            },
+            "description": "Experimental; nonempty images are routed to the separate vision backend for a vision-enabled API key. Returns 403 when vision is not enabled for the key, or 503 when the vision backend is not configured. No trained vision checkpoint or measured vision quality. PNG/JPEG/WebP only; at most 4 MiB and 16 MP per image, 8 MiB decoded total, 13 MiB request body. Transparent images are rejected. Local file paths are not accepted."
+          }
+        },
+        "additionalProperties": false
+      },
+      "NativeQuestion": {
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ChoiceQuestion"
+          },
+          {
+            "$ref": "#/components/schemas/NoulQuestion"
+          },
+          {
+            "$ref": "#/components/schemas/ScoreQuestion"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "choice": "#/components/schemas/ChoiceQuestion",
+            "noul": "#/components/schemas/NoulQuestion",
+            "score": "#/components/schemas/ScoreQuestion"
+          }
+        }
+      },
+      "ChoiceQuestion": {
+        "required": [
+          "question",
+          "options",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "choice"
+            ],
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "options": {
+            "maxProperties": 255,
+            "minProperties": 2,
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "NoulQuestion": {
+        "required": [
+          "statement",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "noul"
+            ],
+            "type": "string"
+          },
+          "statement": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "criteria": {
+            "type": "string",
+            "default": "Evaluate the statement against the supplied state."
+          },
+          "true_description": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string",
+            "default": "The statement is true."
+          },
+          "false_description": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string",
+            "default": "The statement is false."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScoreQuestion": {
+        "required": [
+          "question",
+          "levels",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "score"
+            ],
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "levels": {
+            "maxItems": 10,
+            "minItems": 2,
+            "type": "array",
+            "items": {
+              "maxLength": 100000,
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "BatchRequest": {
+        "required": [
+          "endpoint",
+          "shards"
+        ],
+        "type": "object",
+        "properties": {
+          "endpoint": {
+            "enum": [
+              "/v1/predict",
+              "/v1/systemone",
+              "/client/v4/accounts/batch/ai/run/@cf/cloudflare/clef",
+              "/client/v4/accounts/batch/ai/run/@cf/cloudflare/clef-flash"
+            ],
+            "type": "string"
+          },
+          "shards": {
+            "maxItems": 1000,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchShardRequest"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "description": "Pre-signed URLs must remain valid for at least one hour; expiry is the earliest URL expiry, capped at seven days. Cloudflare routes require the fixed account placeholder batch; customer account IDs are not accepted. Body limit: 16 MiB."
+      },
+      "BatchShardRequest": {
+        "required": [
+          "input_url",
+          "output_url"
+        ],
+        "type": "object",
+        "properties": {
+          "input_url": {
+            "type": "string"
+          },
+          "output_url": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

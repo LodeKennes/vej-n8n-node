@@ -1,0 +1,58 @@
+{
+  "name": "Vej · Assess a Statement",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual",
+      "name": "Run example",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "vej",
+      "name": "Assess a Statement",
+      "type": "n8n-nodes-vej.vej",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "resource": "decision",
+        "operation": "noul",
+        "stateFormat": "text",
+        "state": "The customer received a damaged desk lamp and asks for a replacement.",
+        "questionId": "result",
+        "question": "The customer requests a replacement.",
+        "choices": "{\n  \"replacement\": \"Review a replacement request\",\n  \"refund\": \"Review a refund request\",\n  \"other\": \"Ask a person for more information\"\n}",
+        "levels": "[\n  \"Missing the issue and item\",\n  \"Has the issue but needs order details\",\n  \"Contains all details needed for review\"\n]",
+        "timeout": 60000
+      },
+      "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.",
+      "notesInFlow": true,
+      "retryOnFail": false
+    }
+  ],
+  "connections": {
+    "Run example": {
+      "main": [
+        [
+          {
+            "node": "Assess a Statement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

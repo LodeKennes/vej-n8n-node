@@ -1,0 +1,81 @@
+{
+	"name": "n8n-nodes-vej",
+	"version": "0.1.0",
+	"description": "State in, probabilities out. Native decisions and all 11 Vej Beta workflows for n8n.",
+	"license": "MIT",
+	"homepage": "https://github.com/LodeKennes/vej-n8n-node#readme",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n",
+		"vej",
+		"probabilities",
+		"classification",
+		"routing",
+		"document-review"
+	],
+	"author": {
+		"name": "Lode Kennes",
+		"email": "hello@itsvej.com",
+		"url": "https://itsvej.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/LodeKennes/vej-n8n-node.git"
+	},
+	"bugs": {
+		"url": "https://github.com/LodeKennes/vej-n8n-node/issues"
+	},
+	"packageManager": "bun@1.4.3",
+	"engines": {
+		"node": ">=22.16",
+		"bun": ">=1.3.0"
+	},
+	"scripts": {
+		"build": "bun run scripts/build.mts",
+		"lint": "bun --bun run node_modules/@n8n/node-cli/bin/n8n-node.mjs lint",
+		"lint:fix": "bun --bun run node_modules/@n8n/node-cli/bin/n8n-node.mjs lint --fix",
+		"typecheck": "tsc --noEmit",
+		"test": "bun test",
+		"check": "bun run typecheck && bun run lint && bun test && bun run build && bun run scripts/check-package.mts",
+		"dev": "bun --bun run node_modules/@n8n/node-cli/bin/n8n-node.mjs dev",
+		"prepack": "bun run build",
+		"examples:generate": "bun run scripts/generate-examples.mts",
+		"examples:custom": "bun run scripts/generate-examples.mts --custom",
+		"brand:build": "bun run scripts/build-banner.mts",
+		"test:n8n": "bun run scripts/smoke-n8n.mts",
+		"test:n8n:package": "bun run scripts/smoke-n8n.mts --package"
+	},
+	"files": [
+		"dist",
+		"assets/logo.svg",
+		"assets/logo-light.svg",
+		"assets/banner.svg",
+		"docs",
+		"examples",
+		"NOTICE",
+		"assets/LICENSE-VEJ.txt",
+		"assets/n8n-node.png",
+		"assets/fonts",
+		"assets/banner.png"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/VejApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/Vej/Vej.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "0.52.6",
+		"@types/bun": "1.3.11",
+		"ajv": "8.17.1",
+		"ajv-formats": "3.0.1",
+		"typescript": "5.9.3"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	}
+}

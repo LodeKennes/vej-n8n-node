@@ -1,0 +1,53 @@
+{
+  "name": "Vej · Predict Multiple Questions",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual",
+      "name": "Run example",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "vej",
+      "name": "Predict Multiple Questions",
+      "type": "n8n-nodes-vej.vej",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "resource": "decision",
+        "operation": "predict",
+        "input": "{\n  \"state\": \"The customer received the wrong item and asks for a replacement.\",\n  \"questions\": {\n    \"route\": {\n      \"type\": \"choice\",\n      \"question\": \"Where should this request go?\",\n      \"options\": {\n        \"exchange\": \"Arrange a replacement\",\n        \"refund\": \"Review a refund\",\n        \"review\": \"Ask a person for more information\"\n      }\n    },\n    \"needs_review\": {\n      \"type\": \"noul\",\n      \"statement\": \"The request needs a person to review it.\"\n    },\n    \"completeness\": {\n      \"type\": \"score\",\n      \"question\": \"How complete is the request?\",\n      \"levels\": [\n        \"Missing the item and the issue\",\n        \"Describes the issue but needs order details\",\n        \"Contains all details needed for review\"\n      ]\n    }\n  }\n}",
+        "timeout": 60000
+      },
+      "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.",
+      "notesInFlow": true,
+      "retryOnFail": false
+    }
+  ],
+  "connections": {
+    "Run example": {
+      "main": [
+        [
+          {
+            "node": "Predict Multiple Questions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

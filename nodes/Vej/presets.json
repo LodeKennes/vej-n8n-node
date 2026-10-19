@@ -1,0 +1,306 @@
+{
+	"predict": {
+		"state": "The customer received the wrong item and asks for a replacement.",
+		"questions": {
+			"route": {
+				"type": "choice",
+				"question": "Where should this request go?",
+				"options": {
+					"exchange": "Arrange a replacement",
+					"refund": "Review a refund",
+					"review": "Ask a person for more information"
+				}
+			},
+			"needs_review": {
+				"type": "noul",
+				"statement": "The request needs a person to review it."
+			},
+			"completeness": {
+				"type": "score",
+				"question": "How complete is the request?",
+				"levels": [
+					"Missing the item and the issue",
+					"Describes the issue but needs order details",
+					"Contains all details needed for review"
+				]
+			}
+		}
+	},
+	"risk": {
+		"binding": {
+			"base_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			"parts": {},
+			"population_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+			"runtime_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+		},
+		"request": {
+			"state": "The public account endpoint was removed.",
+			"questions": {
+				"breaking": {
+					"type": "noul",
+					"statement": "This change breaks the public API."
+				}
+			}
+		},
+		"calibration": "REPLACE_WITH_YOUR_CALIBRATION_TOKEN"
+	},
+	"alignments": {
+		"question": "Returns are accepted for 14 days.",
+		"sources": [
+			{
+				"id": "policy",
+				"text": "Returns are accepted for 14 days. Keep your receipt for the review."
+			}
+		]
+	},
+	"estimate": {
+		"state": "A short pull request is waiting for one reviewer.",
+		"questions": {
+			"review_hours": {
+				"type": "estimate",
+				"question": "How many hours of review work remain?",
+				"unit": "hours",
+				"values": [0, 1, 2, 4, 8]
+			}
+		}
+	},
+	"annotate": {
+		"document": "Switch off the machine before opening the cover.\nWrite the service date in the log.",
+		"segment": "line",
+		"questions": {
+			"safety": {
+				"type": "noul",
+				"statement": "This segment contains a safety instruction."
+			}
+		}
+	},
+	"given": {
+		"state": "The package arrived damaged. Please send another one.",
+		"first": {
+			"type": "choice",
+			"question": "What does the customer request?",
+			"options": {
+				"replacement": "A replacement item",
+				"refund": "Money returned",
+				"other": "Another resolution"
+			}
+		},
+		"first_outcome": "replacement",
+		"condition": "replacement",
+		"conditional": {
+			"type": "noul",
+			"statement": "Assuming a replacement request, the reason is damage in transit."
+		}
+	},
+	"bind": {
+		"state": "The desk lamp ordered last week arrived broken.",
+		"question": "Which supplied order is referenced?",
+		"records": [
+			{
+				"id": "order-41",
+				"name": "lamp",
+				"description": "Desk lamp ordered last week",
+				"fields": {
+					"refunded": false,
+					"reviewer": null,
+					"refund_count": 0
+				}
+			},
+			{
+				"id": "order-12",
+				"name": "notebook",
+				"description": "Notebook ordered last month"
+			}
+		]
+	},
+	"flows": {
+		"state": {
+			"documents": ["identity", "lease"]
+		},
+		"steps": [
+			{
+				"id": "residence",
+				"question": {
+					"type": "noul",
+					"statement": "The documents include proof of residence."
+				}
+			},
+			{
+				"id": "income",
+				"question": {
+					"type": "noul",
+					"statement": "The supplied income document supports the application."
+				},
+				"depends_on": ["residence"],
+				"when": {
+					"step": "residence",
+					"outcome": "true"
+				},
+				"requires": ["income_document"]
+			}
+		],
+		"inputs": {},
+		"previous_results": [],
+		"recompute": false
+	},
+	"rankings": {
+		"state": "Errors began immediately after reducing the database connection limit.",
+		"question": "Which change should an engineer investigate first?",
+		"candidates": [
+			{
+				"id": "db",
+				"name": "Database limit",
+				"description": "Lower the database connection limit"
+			},
+			{
+				"id": "css",
+				"name": "Page spacing",
+				"description": "Adjust the spacing in the footer"
+			}
+		],
+		"top_k": 1
+	},
+	"effort": {
+		"state": "A proposed change updates request validation.",
+		"questions": {
+			"security": {
+				"type": "noul",
+				"statement": "This change needs a security review.",
+				"effort": "standard"
+			}
+		}
+	},
+	"calibrations": {
+		"binding": {
+			"population_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+		},
+		"target_error_rate": 0.05,
+		"persist": false,
+		"temperature_fit": [
+			{
+				"group_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+				"request": {
+					"state": "The documented public export was removed.",
+					"questions": {
+						"breaking": {
+							"type": "noul",
+							"statement": "This change breaks the public API."
+						}
+					}
+				},
+				"target": 0
+			}
+		],
+		"risk_fit": [
+			{
+				"group_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+				"request": {
+					"state": "The changelog formatting was adjusted.",
+					"questions": {
+						"breaking": {
+							"type": "noul",
+							"statement": "This change breaks the public API."
+						}
+					}
+				},
+				"target": 1
+			}
+		]
+	},
+	"feedback": {
+		"binding": {
+			"base_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			"parts": {},
+			"population_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+			"runtime_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+		},
+		"target_error_rate": 0.05,
+		"persist": false,
+		"events": [
+			{
+				"event_id": "checked-1",
+				"group_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+				"role": "temperature-fit",
+				"outcomes": [
+					{
+						"key": "true",
+						"candidate_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+					},
+					{
+						"key": "false",
+						"candidate_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+					}
+				],
+				"logits": [1.5, -0.5],
+				"outcome_key": "true"
+			},
+			{
+				"event_id": "checked-2",
+				"group_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+				"role": "risk-fit",
+				"outcomes": [
+					{
+						"key": "true",
+						"candidate_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+					},
+					{
+						"key": "false",
+						"candidate_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+					}
+				],
+				"logits": [-0.5, 1.5],
+				"outcome_key": "false"
+			}
+		]
+	},
+	"createState": {
+		"operation": "create",
+		"expected_seq": 0,
+		"history": "Customer: Can you explain the returns policy?",
+		"questions": {
+			"refund": {
+				"type": "noul",
+				"statement": "The customer is asking for a refund."
+			}
+		}
+	},
+	"stateEvent": {
+		"operation": "event",
+		"expected_seq": 1,
+		"event": "Customer: The item arrived damaged. I would like my money back.",
+		"questions": {
+			"refund": {
+				"type": "noul",
+				"statement": "The customer is asking for a refund."
+			}
+		}
+	},
+	"queryState": {
+		"operation": "event",
+		"expected_seq": 1,
+		"questions": {
+			"refund": {
+				"type": "noul",
+				"statement": "The customer is asking for a refund."
+			}
+		}
+	},
+	"calibrationToken": {
+		"binding": {
+			"base_checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			"parts": {},
+			"population_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+			"runtime_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+		},
+		"calibration": "REPLACE_WITH_YOUR_CALIBRATION_TOKEN"
+	},
+	"batch": {
+		"endpoint": "/v1/predict",
+		"shards": [
+			{
+				"input_url": "https://YOUR_APPROVED_EU_STORAGE_HOST/input.jsonl?SIGNED_GET",
+				"output_url": "https://YOUR_APPROVED_EU_STORAGE_HOST/output.jsonl?SIGNED_PUT"
+			}
+		]
+	}
+}

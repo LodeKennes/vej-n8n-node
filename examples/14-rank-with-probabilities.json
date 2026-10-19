@@ -1,0 +1,53 @@
+{
+  "name": "Vej · Rank with Probabilities",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual",
+      "name": "Run example",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "vej",
+      "name": "Rank with Probabilities",
+      "type": "n8n-nodes-vej.vej",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "resource": "workflow",
+        "operation": "rankings",
+        "input": "{\n  \"state\": \"Errors began immediately after reducing the database connection limit.\",\n  \"question\": \"Which change should an engineer investigate first?\",\n  \"candidates\": [\n    {\n      \"id\": \"db\",\n      \"name\": \"Database limit\",\n      \"description\": \"Lower the database connection limit\"\n    },\n    {\n      \"id\": \"css\",\n      \"name\": \"Page spacing\",\n      \"description\": \"Adjust the spacing in the footer\"\n    }\n  ],\n  \"top_k\": 1\n}",
+        "timeout": 60000
+      },
+      "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.\n\nRankings quality gate failed. This example demonstrates the request contract, not validated quality.",
+      "notesInFlow": true,
+      "retryOnFail": false
+    }
+  ],
+  "connections": {
+    "Run example": {
+      "main": [
+        [
+          {
+            "node": "Rank with Probabilities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

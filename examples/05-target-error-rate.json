@@ -1,0 +1,53 @@
+{
+  "name": "Vej · Target Error Rate",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual",
+      "name": "Run example",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "vej",
+      "name": "Target Error Rate",
+      "type": "n8n-nodes-vej.vej",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "resource": "workflow",
+        "operation": "risk",
+        "input": "{\n  \"binding\": {\n    \"base_checkpoint_sha256\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n    \"parts\": {},\n    \"population_sha256\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\n    \"runtime_sha256\": \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"\n  },\n  \"request\": {\n    \"state\": \"The public account endpoint was removed.\",\n    \"questions\": {\n      \"breaking\": {\n        \"type\": \"noul\",\n        \"statement\": \"This change breaks the public API.\"\n      }\n    }\n  },\n  \"calibration\": \"REPLACE_WITH_YOUR_CALIBRATION_TOKEN\"\n}",
+        "timeout": 60000
+      },
+      "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.\n\nShape example only: replace placeholder digests, tokens, scores, and labels with your own data. Small calibration fixtures cannot qualify a risk target.",
+      "notesInFlow": true,
+      "retryOnFail": false
+    }
+  ],
+  "connections": {
+    "Run example": {
+      "main": [
+        [
+          {
+            "node": "Target Error Rate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,84 @@
+{
+  "name": "Vej · Create a Conversation",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual",
+      "name": "Run example",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "vej",
+      "name": "Create a Conversation",
+      "type": "n8n-nodes-vej.vej",
+      "typeVersion": 1,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "resource": "conversation",
+        "operation": "create",
+        "input": "{\n  \"operation\": \"create\",\n  \"expected_seq\": 0,\n  \"history\": \"Customer: Can you explain the returns policy?\",\n  \"questions\": {\n    \"refund\": {\n      \"type\": \"noul\",\n      \"statement\": \"The customer is asking for a refund.\"\n    }\n  }\n}",
+        "timeout": 60000
+      },
+      "notes": "Choose your Vej API credential before running. This example is inactive and runs no external actions.\n\nBeta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.\n\nExplicit states retention consent is required. Append and query use the returned sequence; do not enable Retry On Fail.",
+      "notesInFlow": true,
+      "retryOnFail": false
+    },
+    {
+      "id": "append",
+      "name": "Append a message",
+      "type": "n8n-nodes-vej.vej",
+      "typeVersion": 1,
+      "position": [
+        820,
+        300
+      ],
+      "retryOnFail": false,
+      "parameters": {
+        "resource": "conversation",
+        "operation": "append",
+        "recordId": "={{ $json.id }}",
+        "timeout": 60000,
+        "input": "={{ { operation: \"event\", expected_seq: $json.seq, event: \"Customer: The lamp arrived broken. Please send a replacement.\", questions: { replacement: { type: \"noul\", statement: \"The customer requests a replacement.\" } } } }}"
+      },
+      "notes": "Select your Vej credential. Uses the create result ID and sequence; this action advances the sequence.",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Run example": {
+      "main": [
+        [
+          {
+            "node": "Create a Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a Conversation": {
+      "main": [
+        [
+          {
+            "node": "Append a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,1306 @@
+{
+  "components": {
+    "schemas": {
+      "RiskAlignmentInput": {
+        "required": [
+          "question",
+          "sources"
+        ],
+        "type": "object",
+        "properties": {
+          "question": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "sources": {
+            "maxItems": 16,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskAlignmentSource"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskAlignmentSource": {
+        "required": [
+          "id",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 100000,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskAnnotateInput": {
+        "required": [
+          "document",
+          "questions"
+        ],
+        "type": "object",
+        "oneOf": [
+          {
+            "required": [
+              "segment"
+            ],
+            "properties": {
+              "segment": {
+                "type": "string"
+              },
+              "segments": {
+                "type": "null"
+              }
+            }
+          },
+          {
+            "required": [
+              "segments"
+            ],
+            "properties": {
+              "segments": {
+                "type": "array"
+              },
+              "segment": {
+                "type": "null"
+              }
+            }
+          }
+        ],
+        "properties": {
+          "document": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "segment": {
+            "anyOf": [
+              {
+                "enum": [
+                  "line",
+                  "paragraph",
+                  "word"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "segments": {
+            "anyOf": [
+              {
+                "maxItems": 128,
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RiskSegment"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "questions": {
+            "maxProperties": 128,
+            "minProperties": 1,
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/RiskChoice"
+                },
+                {
+                  "$ref": "#/components/schemas/RiskNoul"
+                },
+                {
+                  "$ref": "#/components/schemas/RiskScore"
+                }
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskSegment": {
+        "required": [
+          "id",
+          "start",
+          "end"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 100000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "start": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "end": {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskChoice": {
+        "required": [
+          "question",
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "choice",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "options": {
+            "maxProperties": 255,
+            "minProperties": 2,
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskNoul": {
+        "required": [
+          "statement"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "noul",
+            "type": "string"
+          },
+          "statement": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "criteria": {
+            "type": "string"
+          },
+          "true_description": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "false_description": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskScore": {
+        "required": [
+          "question",
+          "levels"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "score",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "levels": {
+            "maxItems": 10,
+            "minItems": 2,
+            "type": "array",
+            "items": {
+              "maxLength": 100000,
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskBindInput": {
+        "required": [
+          "state",
+          "question",
+          "records"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/RiskJsonValue"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RiskJsonValue"
+                }
+              }
+            ]
+          },
+          "question": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "records": {
+            "maxItems": 254,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskBindRecord"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskJsonValue": {},
+      "RiskBindRecord": {
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "fields": {
+            "maxProperties": 128,
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RiskJsonValue"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskCalibrationInput": {
+        "required": [
+          "binding",
+          "target_error_rate",
+          "temperature_fit",
+          "risk_fit"
+        ],
+        "type": "object",
+        "properties": {
+          "binding": {
+            "$ref": "#/components/schemas/RiskCalibrationBinding"
+          },
+          "target_error_rate": {
+            "exclusiveMaximum": 1,
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "temperature_fit": {
+            "maxItems": 2000,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskLabeledRequest"
+            }
+          },
+          "risk_fit": {
+            "maxItems": 2000,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskLabeledRequest"
+            }
+          },
+          "persist": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskCalibrationBinding": {
+        "required": [
+          "population_sha256"
+        ],
+        "type": "object",
+        "properties": {
+          "population_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskLabeledRequest": {
+        "required": [
+          "group_sha256",
+          "request",
+          "target"
+        ],
+        "type": "object",
+        "properties": {
+          "group_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "request": {
+            "$ref": "#/components/schemas/RiskClassificationRequest"
+          },
+          "target": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskClassificationRequest": {
+        "required": [
+          "state",
+          "questions"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/RiskJsonValue"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RiskJsonValue"
+                }
+              }
+            ]
+          },
+          "images": {
+            "maxItems": 0,
+            "type": "array",
+            "items": {
+              "maxLength": 4096,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "questions": {
+            "maxProperties": 1,
+            "minProperties": 1,
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/RiskChoice"
+                },
+                {
+                  "$ref": "#/components/schemas/RiskNoul"
+                }
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskCalibrationReference": {
+        "required": [
+          "action",
+          "binding",
+          "calibration"
+        ],
+        "type": "object",
+        "properties": {
+          "action": {
+            "pattern": "^(read|delete)$",
+            "type": "string"
+          },
+          "binding": {
+            "$ref": "#/components/schemas/RiskRiskBinding"
+          },
+          "calibration": {
+            "maxLength": 16384,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskRiskBinding": {
+        "required": [
+          "base_checkpoint_sha256",
+          "parts",
+          "population_sha256",
+          "runtime_sha256"
+        ],
+        "type": "object",
+        "properties": {
+          "base_checkpoint_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "parts": {
+            "propertyNames": {
+              "enum": [
+                "ranking_head",
+                "ranking_temperature"
+              ]
+            },
+            "maxProperties": 32,
+            "type": "object",
+            "additionalProperties": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            }
+          },
+          "population_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "runtime_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Opaque calibration compatibility bindings."
+      },
+      "RiskEffortInput": {
+        "required": [
+          "state",
+          "questions"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/RiskJsonValue"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RiskJsonValue"
+                }
+              }
+            ]
+          },
+          "questions": {
+            "maxProperties": 128,
+            "minProperties": 1,
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/RiskEffortChoice"
+                },
+                {
+                  "$ref": "#/components/schemas/RiskEffortNoul"
+                },
+                {
+                  "$ref": "#/components/schemas/RiskEffortScore"
+                }
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskEffortChoice": {
+        "required": [
+          "question",
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "choice",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "options": {
+            "maxProperties": 255,
+            "minProperties": 2,
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "effort": {
+            "enum": [
+              "fast",
+              "standard",
+              "careful"
+            ],
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskEffortNoul": {
+        "required": [
+          "statement"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "noul",
+            "type": "string"
+          },
+          "statement": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "criteria": {
+            "type": "string"
+          },
+          "true_description": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "false_description": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "effort": {
+            "enum": [
+              "fast",
+              "standard",
+              "careful"
+            ],
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskEffortScore": {
+        "required": [
+          "question",
+          "levels"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "score",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "levels": {
+            "maxItems": 10,
+            "minItems": 2,
+            "type": "array",
+            "items": {
+              "maxLength": 100000,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "effort": {
+            "enum": [
+              "fast",
+              "standard",
+              "careful"
+            ],
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskEstimateInput": {
+        "required": [
+          "state",
+          "questions"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "questions": {
+            "maxProperties": 128,
+            "minProperties": 1,
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RiskEstimateQuestion"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskEstimateQuestion": {
+        "required": [
+          "type",
+          "question",
+          "unit",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "estimate",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "unit": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "values": {
+            "maxItems": 10,
+            "minItems": 2,
+            "type": "array",
+            "items": {
+              "maximum": 1000000000000,
+              "minimum": -1000000000000,
+              "type": "number"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskFeedbackInput": {
+        "required": [
+          "binding",
+          "target_error_rate",
+          "events"
+        ],
+        "type": "object",
+        "properties": {
+          "binding": {
+            "$ref": "#/components/schemas/RiskRiskBinding"
+          },
+          "target_error_rate": {
+            "exclusiveMaximum": 1,
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "events": {
+            "maxItems": 6000,
+            "minItems": 2,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskFeedbackEvent"
+            }
+          },
+          "persist": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskFeedbackEvent": {
+        "required": [
+          "event_id",
+          "group_sha256",
+          "role",
+          "outcomes",
+          "logits",
+          "outcome_key"
+        ],
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "group_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "temperature-fit",
+              "risk-fit",
+              "check"
+            ],
+            "type": "string"
+          },
+          "outcomes": {
+            "maxItems": 255,
+            "minItems": 2,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskFeedbackOutcome"
+            }
+          },
+          "logits": {
+            "maxItems": 255,
+            "minItems": 2,
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "outcome_key": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskFeedbackOutcome": {
+        "required": [
+          "key",
+          "candidate_sha256"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "candidate_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Customer-owned semantic outcome, pinned to the candidate's content digest."
+      },
+      "RiskFlowInput": {
+        "required": [
+          "state",
+          "steps"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/RiskJsonValue"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RiskJsonValue"
+                }
+              }
+            ]
+          },
+          "steps": {
+            "maxItems": 32,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskFlowStep"
+            }
+          },
+          "inputs": {
+            "maxProperties": 128,
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RiskJsonValue"
+            }
+          },
+          "previous_results": {
+            "maxItems": 32,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskFlowValue"
+            }
+          },
+          "recompute": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskFlowStep": {
+        "required": [
+          "id",
+          "question"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "question": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RiskChoice"
+              },
+              {
+                "$ref": "#/components/schemas/RiskNoul"
+              }
+            ]
+          },
+          "depends_on": {
+            "maxItems": 32,
+            "type": "array",
+            "items": {
+              "maxLength": 100000,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "requires": {
+            "maxItems": 32,
+            "type": "array",
+            "items": {
+              "maxLength": 100000,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "when": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RiskFlowCondition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskFlowCondition": {
+        "required": [
+          "step",
+          "outcome"
+        ],
+        "type": "object",
+        "properties": {
+          "step": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "outcome": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskFlowValue": {
+        "required": [
+          "step_id",
+          "flow_sha256",
+          "content_sha256",
+          "outcome",
+          "probabilities",
+          "provenance"
+        ],
+        "type": "object",
+        "properties": {
+          "step_id": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "flow_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "content_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          },
+          "outcome": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "probabilities": {
+            "type": "object",
+            "additionalProperties": {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            }
+          },
+          "provenance": {
+            "enum": [
+              "executed",
+              "caller_assertion"
+            ],
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskGivenInput": {
+        "required": [
+          "state",
+          "first",
+          "first_outcome",
+          "condition",
+          "conditional"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/RiskJsonValue"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RiskJsonValue"
+                }
+              }
+            ]
+          },
+          "first": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RiskChoice"
+              },
+              {
+                "$ref": "#/components/schemas/RiskNoul"
+              }
+            ]
+          },
+          "first_outcome": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "condition": {
+            "$ref": "#/components/schemas/RiskJsonValue"
+          },
+          "conditional": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RiskChoice"
+              },
+              {
+                "$ref": "#/components/schemas/RiskNoul"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskRankingInput": {
+        "required": [
+          "state",
+          "question",
+          "candidates",
+          "top_k"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "candidates": {
+            "maxItems": 32,
+            "minItems": 2,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskRankingCandidate"
+            }
+          },
+          "top_k": {
+            "maximum": 32,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskRankingCandidate": {
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 100000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskRiskInput": {
+        "required": [
+          "binding",
+          "request",
+          "calibration"
+        ],
+        "type": "object",
+        "properties": {
+          "binding": {
+            "$ref": "#/components/schemas/RiskRiskBinding"
+          },
+          "request": {
+            "$ref": "#/components/schemas/RiskClassificationRequest"
+          },
+          "calibration": {
+            "maxLength": 16384,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskStoredRiskInput": {
+        "required": [
+          "binding",
+          "request",
+          "calibration_id"
+        ],
+        "type": "object",
+        "properties": {
+          "binding": {
+            "$ref": "#/components/schemas/RiskRiskBinding"
+          },
+          "request": {
+            "$ref": "#/components/schemas/RiskClassificationRequest"
+          },
+          "calibration_id": {
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskStateInput": {
+        "required": [
+          "operation",
+          "expected_seq"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "operation": {
+                  "const": "create"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "history"
+              ],
+              "properties": {
+                "expected_seq": {
+                  "enum": [
+                    0
+                  ]
+                },
+                "history": {
+                  "type": "string"
+                },
+                "event": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "operation": {
+                  "const": "event"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "expected_seq": {
+                  "minimum": 1
+                },
+                "history": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "operation": {
+            "enum": [
+              "create",
+              "event"
+            ],
+            "type": "string"
+          },
+          "expected_seq": {
+            "maximum": 2147483646,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "history": {
+            "anyOf": [
+              {
+                "maxLength": 100000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "event": {
+            "anyOf": [
+              {
+                "maxLength": 100000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "questions": {
+            "maxProperties": 128,
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/RiskChoice"
+                },
+                {
+                  "$ref": "#/components/schemas/RiskNoul"
+                },
+                {
+                  "$ref": "#/components/schemas/RiskScore"
+                }
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "RetentionUpdate": {
+        "required": [
+          "enabled"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Per-organization API consent defaults false. States requires explicit consent; feedback/calibrations can run request-scoped without persistence. Limits apply only to approved new retained categories; null means no approved new retained limit; calibrations enforce a 30-day absolute technical cap; legal approval remains pending; feedback labels and fits enforce a 30-day absolute technical cap. Batch URL custody is unchanged; no legal approval or feature availability follows."
+      }
+    }
+  }
+}
