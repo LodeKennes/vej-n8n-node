@@ -13,11 +13,11 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v7.0.1
+      - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: 1.4.3
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: '24'
           registry-url: https://registry.npmjs.org
@@ -30,9 +30,14 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run check
       - run: mkdir -p artifacts && bun pm pack --destination artifacts
+      - run: bun run scan:local
+      - name: Verify the installed package in n8n
+        run: bun run test:n8n:package
       # Bun still owns install, test, build, and pack. Its publish command cannot
       # generate provenance, so only this registry upload uses the npm CLI.
       - name: Publish the checked tarball with provenance
         run: npm publish artifacts/n8n-nodes-vej-*.tgz --provenance --access public --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Verify the published package and provenance
+        run: bun run scan:registry

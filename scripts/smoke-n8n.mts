@@ -54,6 +54,11 @@ const server = Bun.serve({
 		const text = await request.text();
 		const body = text ? JSON.parse(text) : undefined;
 		received.push({ method: request.method, path: url.pathname + url.search, body });
+		if (body?.state === 'fixture_429')
+			return Response.json(
+				{ detail: 'Rate limit reached; echoed vej_sk_local_fixture' },
+				{ status: 429 },
+			);
 		if (request.method === 'DELETE') return new Response(null, { status: 204 });
 		return Response.json({
 			model: 'pea',
@@ -63,6 +68,7 @@ const server = Bun.serve({
 			metadata: { fixture_only: true },
 			usage: { processed_tokens: 0 },
 			fixture: { method: request.method, path: url.pathname },
+			observed_state: body?.state,
 		});
 	},
 });
@@ -218,7 +224,104 @@ try {
 	}
 	if (!output.includes('"fixture_only": true'))
 		throw new Error('Expected fixture metadata in n8n execution output.');
+	if (!cloud) {
+		const start = output.indexOf('{\n  "data":');
+		if (start < 0) throw new Error('Expected execution JSON in all-action output.');
+		const run = JSON.parse(output.slice(start));
+		for (const operation of operations) {
+			const item =
+				run.data.resultData.runData[`${operation.resource}-${operation.value}`][0].data.main[0][0];
+			if (item.pairedItem?.item !== 0) throw new Error('Missing output item pairing.');
+			if (operation.method === 'DELETE') {
+				if (forms ? item.json.deleted !== true : Object.keys(item.json).length !== 0)
+					throw new Error('Deletion output did not preserve the expected node-version behavior.');
+			}
+		}
+	}
 	await Bun.write(`${directory}/requests.json`, JSON.stringify(received, null, 2));
+	if (packaged) {
+		const routingWorkflow = {
+			id: 'vej-smoke-routing',
+			name: 'Vej declarative routing behavior',
+			active: false,
+			nodes: [
+				trigger,
+				{
+					id: 'items',
+					name: 'Prepare items',
+					type: 'n8n-nodes-base.code',
+					typeVersion: 2,
+					position: [200, 0],
+					parameters: {
+						jsCode:
+							'return ["fixture_first", "fixture_429", "fixture_invalid", "fixture_second"].map(state => ({json: {state}}));',
+					},
+				},
+				{
+					id: 'vej-routing',
+					name: 'Check routing',
+					type: 'n8n-nodes-vej.vej',
+					typeVersion: 2,
+					position: [400, 0],
+					credentials: { vejApi: { id: 'vej-local-fixture', name: 'Vej local fixture' } },
+					continueOnFail: true,
+					retryOnFail: false,
+					parameters: {
+						resource: 'decision',
+						operation: 'score',
+						stateFormat: 'text',
+						state: '={{ $json.state }}',
+						question: 'Is this a local fixture?',
+						questionId: 'result',
+						levelRows: {
+							entries: [
+								{ description: 'Low' },
+								{ description: '={{ $json.state === "fixture_invalid" ? "" : "High" }}' },
+							],
+						},
+						timeout: 60000,
+					},
+				},
+			],
+			connections: {
+				'Run fixture': { main: [[{ node: 'Prepare items', type: 'main', index: 0 }]] },
+				'Prepare items': { main: [[{ node: 'Check routing', type: 'main', index: 0 }]] },
+			},
+			settings: { executionOrder: 'v1' },
+		};
+		await Bun.write(`${directory}/routing-workflow.json`, JSON.stringify(routingWorkflow));
+		await command(['import:workflow', '--input=/fixture/routing-workflow.json'], 'import-routing');
+		const before = received.length;
+		const routed = await command(
+			['execute', '--id=vej-smoke-routing', '--rawOutput'],
+			'execute-routing',
+		);
+		const start = routed.indexOf('{\n  "data":');
+		if (start < 0) throw new Error('Expected execution JSON in routing output.');
+		const run = JSON.parse(routed.slice(start));
+		const items = run.data.resultData.runData['Check routing'][0].data.main[0];
+		if (received.length - before !== 3 || items.length !== 4)
+			throw new Error(
+				'Routing must continue across four inputs, skip invalid input, and never retry 429.',
+			);
+		for (const [index, state] of [
+			[0, 'fixture_first'],
+			[3, 'fixture_second'],
+		] as const) {
+			if (items[index].json.observed_state !== state || items[index].pairedItem?.item !== index)
+				throw new Error('Per-item expressions or output pairing changed.');
+		}
+		const errors = JSON.stringify([items[1], items[2]]);
+		if (
+			!errors.includes('429') ||
+			!errors.includes('Level description') ||
+			errors.includes('vej_sk_local_fixture')
+		)
+			throw new Error('Expected sanitized HTTP error and validation error in continued output.');
+		process.stdout.write(
+			'Real declarative routing preserved per-item expressions, pairing, HTTP 429 redaction, validation, continuation, and no retry.\n',
+		);
+	}
 	process.stdout.write(
 		cloud
 			? 'Built-in-node Cloud starter executed successfully in n8n 2.43.8 against the local API fixture; no custom node loaded.\n'

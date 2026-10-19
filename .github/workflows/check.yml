@@ -8,14 +8,19 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v7.0.1
+      - uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: 1.4.3
       - run: bun install --frozen-lockfile
       - run: bun run check
       - run: mkdir -p artifacts && bun pm pack --destination artifacts
-      - uses: actions/upload-artifact@v4
+      - run: bun run scan:local
+      - name: Verify saved version 1 inputs in n8n
+        run: bun run test:n8n
+      - name: Verify the installed package in n8n
+        run: bun run test:n8n:package
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: n8n-nodes-vej
           path: artifacts/*.tgz

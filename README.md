@@ -15,7 +15,7 @@ Route a request. Check a document. Match a record. Keep the probabilities.
 
 ![Vej for n8n — define the outcomes, connect your next step](assets/banner.png)
 
-[Install](docs/installation.md) · [Import an example](examples/README.md) · [Operations and use cases](docs/operations.md) · [Vej](https://itsvej.com/) · [Get API access](https://app.itsvej.com/)
+[Install](docs/installation.md) · [Import an example](examples/README.md) · [Operations and use cases](docs/operations.md) · [n8n review kit](docs/n8n-review.md) · [Vej](https://itsvej.com/) · [Get API access](https://app.itsvej.com/)
 
 ## What you can build
 
@@ -69,7 +69,7 @@ Run the copy as the account that owns the n8n data directory, then restart your 
 
 For Beta actions, leave **Input Method → Form** selected. Use **Add Source**, **Add Record**, **Add Question**, and the other row controls to assemble the request. The node adds the correct API envelope and route. **Predict Multiple Questions** has separate Choice, Noul, and Score question groups; each question keeps its own ID and outcomes.
 
-Expressions work on individual form fields, including conversation IDs and sequences. For bulk data, change **Input Method → Advanced JSON** and map an object from an earlier node. You can also map repeated collections using n8n expressions; see [operations](docs/operations.md).
+Expressions work on individual form fields, including conversation IDs and sequences. For bulk data, change **Input Method → Advanced JSON** and map an object from an earlier node. Use individual expressions inside repeated form rows; mapping an entire repeated collection is not supported.
 
 ![Vej's guided Choice action running in the n8n editor](assets/n8n-node.png)
 
@@ -102,6 +102,8 @@ bun run check
 bun run dev
 ```
 
-`bun run check` runs TypeScript checks, the official strict n8n linter, Bun contract/execution tests, the official n8n build, and package checks. There are no shipped runtime dependencies. Tests use authored fixtures and pinned Vej request schemas; they do not call paid inference or measure model quality.
+`bun run check` runs TypeScript checks, the official strict n8n linter, Bun contract/routing tests, Bun compilation with the pinned TypeScript compiler and official n8n asset copier, and package checks. There are no shipped runtime dependencies. Tests use authored fixtures and pinned Vej request schemas; they do not call paid inference or measure model quality.
+
+For marketplace preparation, pack the release and run `bun run scan:local`. CI also executes the saved version 1 inputs and installed version 2 package in n8n. [The review kit](docs/n8n-review.md) includes listing copy, assets, a reviewer walkthrough, access requirements, and remaining npm/Creator Portal steps. It does not imply publication or approval.
 
 [Validation](docs/validation.md) · [Contributing](CONTRIBUTING.md) · [MIT code license](LICENSE) · [Asset and schema notices](NOTICE)

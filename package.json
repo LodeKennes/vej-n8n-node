@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-vej",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "State in, probabilities out. Native decisions and all 11 Vej Beta workflows for n8n.",
 	"license": "MIT",
 	"homepage": "https://github.com/LodeKennes/vej-n8n-node#readme",
@@ -34,7 +34,7 @@
 		"build": "bun run scripts/build.mts",
 		"lint": "bun --bun run node_modules/@n8n/node-cli/bin/n8n-node.mjs lint",
 		"lint:fix": "bun --bun run node_modules/@n8n/node-cli/bin/n8n-node.mjs lint --fix",
-		"typecheck": "tsc --noEmit",
+		"typecheck": "bun node_modules/typescript/bin/tsc --noEmit",
 		"test": "bun test",
 		"check": "bun run typecheck && bun run lint && bun test && bun run build && bun run scripts/check-package.mts",
 		"dev": "bun --bun run node_modules/@n8n/node-cli/bin/n8n-node.mjs dev",
@@ -45,7 +45,9 @@
 		"test:n8n": "bun run scripts/smoke-n8n.mts",
 		"test:n8n:package": "bun run scripts/smoke-n8n.mts --package",
 		"test:n8n:forms": "bun run scripts/smoke-n8n.mts --forms",
-		"test:n8n:cloud": "bun run scripts/smoke-n8n.mts --cloud"
+		"test:n8n:cloud": "bun run scripts/smoke-n8n.mts --cloud",
+		"scan:local": "bun run scripts/scan-package.mts",
+		"scan:registry": "bun run scripts/scan-package.mts --registry"
 	},
 	"files": [
 		"dist",
@@ -58,7 +60,8 @@
 		"assets/LICENSE-VEJ.txt",
 		"assets/n8n-node.png",
 		"assets/fonts",
-		"assets/banner.png"
+		"assets/banner.png",
+		"CHANGELOG.md"
 	],
 	"n8n": {
 		"n8nNodesApiVersion": 1,
@@ -72,6 +75,7 @@
 	},
 	"devDependencies": {
 		"@n8n/node-cli": "0.52.6",
+		"@n8n/scan-community-package": "0.39.0",
 		"@types/bun": "1.3.11",
 		"ajv": "8.17.1",
 		"ajv-formats": "3.0.1",

@@ -1,6 +1,6 @@
 # Operations and use cases
 
-The **Vej** node exposes 33 actions. Each input item produces one paired output item containing the complete API response. A 204/empty response becomes `{}`. Errors fail the node unless n8n's **On Error → Continue** is selected; continued errors contain `error` and retain the originating item link.
+The **Vej** node exposes 33 actions through n8n's declarative REST routing. Each successful input item produces one paired output item containing the complete API response. Version 2 deletion actions add `deleted: true`; version 1 preserves empty responses as `{}`. Errors fail the node unless n8n's **On Error → Continue** is selected; n8n handles continued errors and retains the originating item link. No automatic retries are configured.
 
 ## Native decisions
 
@@ -17,6 +17,10 @@ All four actions call `POST /v1/predict`:
 
 The guided actions use `result` as the default question ID; changing it changes the output path. Text and structured JSON state are supported. Names/descriptions are semantic inputs. Questions are independent, and Score uses zero-based indices. The node does not reinterpret scores as probabilities or combine marginal probabilities into a joint confidence.
 
+## Output controls
+
+Raw API responses are the default. Version 2 risk, conditional-question, calibration, and feedback actions can return more than ten top-level fields: ordinary nodes offer **Simplify**, and AI tools offer **Output → Raw / Selected Fields / Simplified**. Simplified output contains at most ten fields. It keeps the main result, available calibration identity/binding, status and usage; risk retains candidate names/index and drift warning, and feedback retains cleanup IDs. Raw output remains available for full diagnostics and reports. Selected output always retains available `id`, `calibration_id`, `calibration_identity`, `feedback_ids`, `candidate_keys`, and `candidate_index` fields. Version 1 outputs remain raw.
+
 ## Eleven Beta workflows
 
 Every action has a form: sources and document text; value bins and units; typed record fields; individual checks and dependencies; conversation history, messages, and sequence; calibration cohorts and reviewed events. The node constructs the API payload for you.
@@ -25,7 +29,7 @@ Calibration rows use **Reviewed Outcome Key**: enter the exact Choice outcome na
 
 The table below documents the resulting API fields. If you choose **Advanced JSON**, provide **only the object inside `input`**; the node adds `mode` automatically. Every action has an authored editable default. An expression may return an object directly. Structured arbitrary state and bulk request variants remain available through Advanced JSON.
 
-Repeated form controls store a collection such as `{ "entries": [{ "name": "refund", "description": "Review a refund" }] }`. A question collection groups rows by kind: `{ "noul": [{ "id": "review", "prompt": "This needs review." }] }`. You can map these collections from earlier nodes rather than manually adding hundreds of calibration rows. These shapes describe expression mapping; ordinary form use does not require entering them.
+Repeated controls use n8n's native form rows. Expressions work on individual values inside those rows. n8n does not support mapping an entire repeated collection through one expression; for bulk calibration data or a variable number of records/questions from earlier nodes, use **Advanced JSON** and map the native API input object instead.
 
 | Use case | Action | Endpoint | Key input fields |
 | --- | --- | --- | --- |

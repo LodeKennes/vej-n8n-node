@@ -1,5 +1,26 @@
 # Validation record
 
+## n8n review candidate v0.3.0
+
+Validated 2026-10-19 on **db-xps-02** (`lk-db-xps-02`), Linux x86_64, in `/home/lode/Projects/Lode/vej-n8n-node`, branch `main`, starting at `a4e831af247fed3a5f4f85bcde9b9dcf7c442378`. Checks ran on the working tree prepared for `v0.3.0`; that tag identifies the final source. The hardware and base toolchain are described below. The additional official scanner is pinned to **0.39.0** as a development dependency. TypeScript **5.9.3** is invoked explicitly through Bun; its output and the official CLI asset copier preserve the CommonJS package format.
+
+- `bun install --frozen-lockfile`: passed.
+- `bun run check`: passed, including **85 tests**, type checking, strict official lint, compilation, and package checks.
+- `bun pm pack --destination artifacts`: passed for `n8n-nodes-vej-0.3.0.tgz`.
+- `bun run scan:local`: passed for runtime TypeScript/package metadata and unpacked JavaScript/package metadata, using the official analyzer with **inline exceptions disabled**. No runtime lint exceptions remain.
+- `bun run test:n8n`: passed for all **33 actions**, version 1 JSON inputs, item pairing, and unchanged empty deletion output.
+- `bun run test:n8n:forms`: passed for all **33 actions**, version 2 forms and deletion confirmation.
+- `bun run test:n8n:package`: passed for all **33 actions** from the installed tarball and a separate four-item declarative-routing workflow. Real n8n resolved individual field expressions, preserved item pairing, continued after a sanitized HTTP 429 and a local validation failure, sent no request for the invalid item, and did not retry the rate-limited request.
+- `bun run test:n8n:cloud`: passed for the built-in-node Cloud starter in local n8n; this is not actual Cloud-account execution.
+
+All integration runs use n8n **2.43.8** and the same pinned Docker image/fake credential fixture described below. The action node now uses declarative `preSend`/`postReceive` hooks rather than `execute()`. Version 1 inputs and raw output remain supported. Version 2 defaults to raw output, with normal-node Simplify and AI-tool Raw/Selected/Simplified controls on larger Beta responses. Unit checks verify native n8n `@tool`/version visibility, a ten-field limit, preservation of risk outcome identity/drift warnings, feedback cleanup identifiers, false/zero values and null calibration thresholds.
+
+An independent read-only **GPT-6 Astra** review checked routing, source/artifact scanning, compiler setup and compatibility. It found that initial simplified layouts lost risk candidate names/index and feedback cleanup IDs. Those fields are now retained and regression-tested. The review also identified an unsupported expression in the smoke fixture's operation selector; the fixture now varies an individual form field and passes in real n8n. Whole repeated-collection expressions are unsupported by n8n and no longer advertised; bulk input uses Advanced JSON.
+
+The reviewer kit is [n8n-review.md](n8n-review.md). The requirements research cites primary sources. Both workflow files parse as YAML; CI runs source/artifact scanning plus legacy and installed-package n8n execution. The manual publishing workflow repeats checks and runs `scan:registry` after npm publication.
+
+**Registry verification remains pending.** The npm package endpoint returned 404, npm authentication was unavailable, and no GitHub publishing secret was configured. `scan:local` does not verify provenance or attested-source retrieval. No npm publication, Creator Portal submission, reviewer service account, live inference, or n8n approval occurred during preparation. Service access and unsupported Beta/batch scope must be resolved before an end-to-end marketplace review.
+
 ## Form builder release v0.2.0
 
 Validated 2026-10-19 on the same **db-xps-02** host and toolchain described below, in `/home/lode/Projects/Lode/vej-n8n-node`, branch `main`. Checks ran on the working tree prepared for `v0.2.0`; that release tag identifies the final source revision.

@@ -5,6 +5,7 @@ type GetParameter = (name: string, fallback?: unknown) => unknown;
 
 export function jsonValue(value: unknown, name: string): unknown {
 	let parsed: unknown;
+	let valid = true;
 	try {
 		parsed = typeof value === 'string' ? JSON.parse(value) : value;
 		JSON.stringify(parsed, (_key, item: unknown) => {
@@ -14,10 +15,10 @@ export function jsonValue(value: unknown, name: string): unknown {
 			return item;
 		});
 	} catch {
-		// Pure validation: execute() wraps this with the node and item index.
-		// eslint-disable-next-line @n8n/community-nodes/require-node-api-error
-		throw new Error(`${name} must contain valid JSON with finite numbers.`);
+		valid = false;
 	}
+	// Keep this validator independent of n8n context; prepareRequest adds the item index.
+	if (!valid) throw new Error(`${name} must contain valid JSON with finite numbers.`);
 	return parsed;
 }
 
@@ -31,14 +32,10 @@ function objectValue(value: unknown, name: string): IDataObject {
 
 export function serviceUrl(value: unknown): string {
 	if (typeof value !== 'string') throw new Error('Set the API URL in your Vej credentials.');
-	let url: URL;
-	try {
-		url = new URL(value);
-	} catch {
-		// Pure validation: execute() adds the n8n execution context.
-		// eslint-disable-next-line @n8n/community-nodes/require-node-api-error
+	if (!URL.canParse(value)) {
 		throw new Error('API URL must be an absolute HTTP or HTTPS service root.');
 	}
+	const url = new URL(value);
 	if (
 		!['http:', 'https:'].includes(url.protocol) ||
 		url.username ||

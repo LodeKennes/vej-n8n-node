@@ -1,20 +1,16 @@
-import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
-import type {
-	IDataObject,
-	IExecuteFunctions,
-	INodeExecutionData,
-	INodeProperties,
-	INodeType,
-	INodeTypeDescription,
-	JsonObject,
-} from 'n8n-workflow';
+import { NodeConnectionTypes } from 'n8n-workflow';
+import type { INodeProperties, INodeType, INodeTypeDescription } from 'n8n-workflow';
 import { operations, presetFor, resources, retentionApis } from './operations';
-import { buildRequest, serviceUrl } from './request';
 import { formProperties } from './forms';
-import { formValues } from './form-input';
+import { prepareRequest, receiveResponse } from './routing';
 
 const primitiveDisplay = { resource: ['decision'], operation: ['choice', 'noul', 'score'] };
 const json = (value: object) => JSON.stringify(value, null, 2);
+const largeResponses = {
+	resource: ['workflow', 'calibration', 'feedback'],
+	operation: ['risk', 'given', 'fit', 'get', 'readToken'],
+	'@version': [2],
+};
 
 const properties: INodeProperties[] = [
 	{
@@ -22,31 +18,29 @@ const properties: INodeProperties[] = [
 		name: 'resource',
 		type: 'options',
 		noDataExpression: true,
-		options: [...resources],
+		options: resources.map(({ name, value }) => ({ name, value })),
+		routing: { send: { preSend: [prepareRequest] }, output: { postReceive: [receiveResponse] } },
 		default: 'decision',
 	},
-	// The default below is resolved from the operation catalog for each resource.
-	/* eslint-disable n8n-nodes-base/node-param-default-missing -- Catalog-generated default is present below. */
 	...resources.map(
-		(resource): INodeProperties => ({
+		({ value, defaultOperation }): INodeProperties => ({
 			displayName: 'Operation',
 			name: 'operation',
 			type: 'options',
 			noDataExpression: true,
-			displayOptions: { show: { resource: [resource.value] } },
+			displayOptions: { show: { resource: [value] } },
 			options: operations
-				.filter((operation) => operation.resource === resource.value)
+				.filter((operation) => operation.resource === value)
 				.sort((a, b) => a.name.localeCompare(b.name))
 				.map((operation) => ({
 					name: operation.name,
 					value: operation.value,
 					description: operation.description,
-					action: operation.name,
+					action: operation.action,
 				})),
-			default: operations.find((operation) => operation.resource === resource.value)!.value,
+			default: defaultOperation,
 		}),
 	),
-	/* eslint-enable n8n-nodes-base/node-param-default-missing */
 	{
 		displayName:
 			'Beta APIs require early access. Availability is deployment-specific. Results retain all API statuses, metadata, and usage. <a href="https://itsvej.com/use-cases/">Read use cases and limitations</a>.',
@@ -306,6 +300,12 @@ export class Vej implements INodeType {
 		outputs: [NodeConnectionTypes.Main],
 		usableAsTool: true,
 		credentials: [{ name: 'vejApi', required: true }],
+		requestDefaults: {
+			baseURL: '={{ $credentials.baseUrl }}',
+			url: '/',
+			json: true,
+			disableFollowRedirect: true,
+		},
 		properties: [
 			...properties
 				.filter((property) => property.name !== 'timeout')
@@ -340,83 +340,89 @@ export class Vej implements INodeType {
 					return [property];
 				}),
 			...formProperties,
+			{
+				displayName: 'Simplify',
+				name: 'simplify',
+				type: 'boolean',
+				default: false,
+				description:
+					'Whether to return a simplified version of the response instead of the raw data',
+				displayOptions: { show: { ...largeResponses, '@tool': [false] } },
+			},
+			{
+				displayName: 'Output',
+				name: 'output',
+				type: 'options',
+				default: 'raw',
+				options: [
+					{ name: 'Raw', value: 'raw', description: 'Return every API response field' },
+					{
+						name: 'Selected Fields',
+						value: 'selected',
+						description: 'Return chosen fields and available resource identifiers',
+					},
+					{
+						name: 'Simplified',
+						value: 'simplified',
+						description: 'Return up to ten commonly used response fields',
+					},
+				],
+				displayOptions: { show: { ...largeResponses, '@tool': [true] } },
+			},
+			{
+				displayName: 'Fields to Include',
+				name: 'outputFields',
+				type: 'multiOptions',
+				default: ['probabilities', 'decision', 'status', 'metadata', 'usage'],
+				options: [
+					'binding',
+					'bound',
+					'calibration',
+					'calibration_id',
+					'calibration_identity',
+					'calls',
+					'candidate_index',
+					'candidate_keys',
+					'check_report',
+					'check_sha256',
+					'condition',
+					'conditional',
+					'confidence',
+					'decision',
+					'drift_warning',
+					'events_used',
+					'expected_answer_rate',
+					'feedback_ids',
+					'feedback_sha256',
+					'first_outcome',
+					'grid_reports',
+					'live_answers',
+					'live_sample_size',
+					'marginal',
+					'metadata',
+					'mode',
+					'model',
+					'population_assumption',
+					'probabilities',
+					'product',
+					'sample_size',
+					'semantics',
+					'status',
+					'target_error_rate',
+					'temperature',
+					'threshold',
+					'upper_bound',
+					'usage',
+				].map((value) => ({
+					name: value
+						.split('_')
+						.map((word) => word[0].toUpperCase() + word.slice(1))
+						.join(' '),
+					value,
+				})),
+				displayOptions: { show: { ...largeResponses, '@tool': [true], output: ['selected'] } },
+			},
 			properties.find((property) => property.name === 'timeout')!,
 		],
 	};
-
-	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-		const items = this.getInputData();
-		const output: INodeExecutionData[] = [];
-		const credentials = await this.getCredentials('vejApi');
-		const baseUrl = serviceUrl(credentials.baseUrl);
-		for (let i = 0; i < items.length; i++) {
-			try {
-				const resource = this.getNodeParameter('resource', i) as string;
-				const operation = this.getNodeParameter('operation', i) as string;
-				let request;
-				try {
-					const get = (name: string, fallback?: unknown) =>
-						this.getNodeParameter(name, i, fallback);
-					const fields =
-						this.getNode().typeVersion >= 2 ? formValues(resource, operation, get) : {};
-					request = buildRequest(resource, operation, (name, fallback) =>
-						Object.prototype.hasOwnProperty.call(fields, name) ? fields[name] : get(name, fallback),
-					);
-				} catch (error) {
-					throw new NodeOperationError(this.getNode(), error as Error, { itemIndex: i });
-				}
-				const { path, ...options } = request;
-				let response: unknown;
-				try {
-					response = await this.helpers.httpRequestWithAuthentication.call(this, 'vejApi', {
-						...options,
-						url: `${baseUrl}${path}`,
-					});
-				} catch (error) {
-					// Keep transport request objects (and their authorization headers) out of errors.
-					const failure = error as {
-						statusCode?: number;
-						response?: { status?: number; body?: IDataObject; data?: IDataObject };
-					};
-					const status =
-						error instanceof NodeApiError
-							? error.httpCode
-							: (failure.statusCode ?? failure.response?.status);
-					const problem = failure.response?.body ?? failure.response?.data;
-					const detail =
-						error instanceof NodeApiError
-							? error.description
-							: (problem?.detail ?? problem?.error ?? problem?.title);
-					const description =
-						typeof detail === 'string'
-							? detail
-							: 'Vej request failed. Check service availability, credentials, access, and input.';
-					const safeDescription =
-						typeof credentials.apiKey === 'string' && credentials.apiKey
-							? description.split(credentials.apiKey).join('[REDACTED]')
-							: description;
-					throw new NodeApiError(this.getNode(), { message: safeDescription } as JsonObject, {
-						httpCode: status ? String(status) : undefined,
-						itemIndex: i,
-						description: safeDescription,
-						message: status ? `Vej API returned HTTP ${status}` : 'Vej API request failed',
-					});
-				}
-				if (response === '' || response == null) response = {};
-				if (typeof response !== 'object' || Array.isArray(response))
-					throw new NodeOperationError(
-						this.getNode(),
-						'Vej returned an unexpected response shape.',
-						{ itemIndex: i },
-					);
-				output.push({ json: response as IDataObject, pairedItem: { item: i } });
-			} catch (error) {
-				// Errors inside this boundary are already normalized to n8n error types.
-				// eslint-disable-next-line @n8n/community-nodes/require-node-api-error
-				if (!this.continueOnFail()) throw error;
-				output.push({ json: { error: (error as Error).message }, pairedItem: { item: i } });
-			}
-		}
-		return [output];
-	}
 }

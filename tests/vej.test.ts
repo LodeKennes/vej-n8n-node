@@ -2,14 +2,20 @@
 import { describe, expect, test } from 'bun:test';
 import Ajv from 'ajv/dist/2020';
 import addFormats from 'ajv-formats';
-import type { IDataObject, IExecuteFunctions, INode, IHttpRequestOptions } from 'n8n-workflow';
-import { NodeApiError, NodeOperationError } from 'n8n-workflow';
+import type {
+	IDataObject,
+	IExecuteSingleFunctions,
+	INode,
+	IHttpRequestOptions,
+} from 'n8n-workflow';
+import { NodeApiError, NodeHelpers, NodeOperationError } from 'n8n-workflow';
 import { Vej } from '../nodes/Vej/Vej.node';
 import { VejApi } from '../credentials/VejApi.credentials';
 import { operations, presetFor, resources } from '../nodes/Vej/operations';
 import { buildRequest, jsonValue, serviceUrl } from '../nodes/Vej/request';
 import { formDefaults, fieldsFor } from '../nodes/Vej/forms';
 import { formValues } from '../nodes/Vej/form-input';
+import { prepareRequest, receiveResponse } from '../nodes/Vej/routing';
 import ga from './contracts/ga.json';
 import beta from './contracts/beta.json';
 
@@ -484,30 +490,52 @@ function execution(
 	reply: (request: IHttpRequestOptions) => Promise<unknown>,
 	continueOnFail = false,
 	version = 1,
+	tool = false,
 ) {
 	const requests: IHttpRequestOptions[] = [];
+	let index = 0;
 	const context = {
-		getInputData: () => rows.map(() => ({ json: {} })),
-		getNodeParameter: (name: string, index: number, fallback?: unknown) =>
-			params(rows[index])(name, fallback),
-		getNode: () => ({ ...node, typeVersion: version }),
+		getItemIndex: () => index,
+		getNodeParameter: (name: string, fallback?: unknown) => params(rows[index])(name, fallback),
+		getNode: () => ({
+			...node,
+			typeVersion: version,
+			type: tool ? 'n8n-nodes-vej.vejTool' : node.type,
+		}),
 		getCredentials: async () => ({
 			baseUrl: 'https://api.itsvej.com/',
 			apiKey: 'fake-unit-test-key',
 		}),
-		continueOnFail: () => continueOnFail,
-		helpers: {
-			httpRequestWithAuthentication: async (credential: string, request: IHttpRequestOptions) => {
-				expect(credential).toBe('vejApi');
-				requests.push(request);
-				return await reply(request);
-			},
+	} as unknown as IExecuteSingleFunctions;
+	// Exercise the hooks in isolation. Real routing, authentication, and error
+	// continuation are covered by the Docker n8n integration fixture.
+	return {
+		requests,
+		async run() {
+			const output = [];
+			for (index = 0; index < rows.length; index++) {
+				try {
+					const request = await prepareRequest.call(context, { url: '/' });
+					requests.push(request);
+					const value = await reply(request);
+					const response =
+						value && typeof value === 'object' && 'statusCode' in value
+							? (value as { statusCode: number; body: IDataObject })
+							: { statusCode: 200, body: value as IDataObject };
+					output.push(...(await receiveResponse.call(context, [], { ...response, headers: {} })));
+				} catch (error) {
+					// Test harness must preserve the hook's original error for assertions.
+					// eslint-disable-next-line @n8n/community-nodes/require-node-api-error
+					if (!continueOnFail) throw error;
+					output.push({ json: { error: (error as Error).message }, pairedItem: { item: index } });
+				}
+			}
+			return [output];
 		},
-	} as unknown as IExecuteFunctions;
-	return { run: () => new Vej().execute.call(context), requests };
+	};
 }
 
-describe('n8n execution contract', () => {
+describe('declarative routing hooks', () => {
 	test('each item evaluates its own fields and retains pairing and the full API response', async () => {
 		const fixture = execution(
 			[
@@ -550,11 +578,11 @@ describe('n8n execution contract', () => {
 		expect((await fixture.run())[0][0].json).toEqual(response);
 		expect(fixture.requests).toHaveLength(1);
 	});
-	test('keeps API error status, does not retry, and does not leak transport headers', async () => {
+	test('keeps API error status without retaining raw response details', async () => {
 		const fixture = execution([{ resource: 'account', operation: 'me' }], async () => {
-			throw {
+			return {
 				statusCode: 429,
-				response: { body: { detail: 'Rate limit reached' } },
+				body: { detail: 'Rate limit reached' },
 				request: { headers: { Authorization: 'Bearer fake-unit-test-key' } },
 			};
 		});
@@ -587,13 +615,12 @@ describe('n8n execution contract', () => {
 		);
 		await expect(failing.run()).rejects.toBeInstanceOf(NodeOperationError);
 	});
-	test('preserves real n8n helper errors while discarding their causes and redacting the key', async () => {
+	test('preserves HTTP conflict detail while redacting an echoed credential', async () => {
 		const fixture = execution([{ resource: 'account', operation: 'me' }], async () => {
-			throw new NodeApiError(
-				node,
-				{ request: { headers: { Authorization: 'Bearer fake-unit-test-key' } } },
-				{ httpCode: '409', description: 'Expected sequence is stale; echoed fake-unit-test-key' },
-			);
+			return {
+				statusCode: 409,
+				body: { detail: 'Expected sequence is stale; echoed fake-unit-test-key' },
+			};
 		});
 		try {
 			await fixture.run();
@@ -605,6 +632,185 @@ describe('n8n execution contract', () => {
 			expect(JSON.stringify(error)).not.toContain('fake-unit-test-key');
 		}
 		expect(fixture.requests).toHaveLength(1);
+	});
+	test('uses declarative routing without a custom execute method', () => {
+		const vej = new Vej();
+		expect('execute' in vej).toBe(false);
+		const routing = vej.description.properties.find(
+			(property) => property.name === 'resource',
+		)!.routing;
+		expect(routing?.send?.preSend).toContain(prepareRequest);
+		expect(routing?.output?.postReceive).toContain(receiveResponse);
+	});
+	test('simplified calibration outputs keep identifiers, status and binding within ten fields', async () => {
+		const body = {
+			model: 'pea',
+			status: 'unverified',
+			calibration: 'token',
+			calibration_id: 'id',
+			calibration_identity: 'identity',
+			binding: { revision: 'one' },
+			temperature: 1,
+			threshold: null,
+			metadata: { status: 'fixture' },
+			usage: {},
+			sample_size: 500,
+			grid_reports: [],
+		};
+		const fixture = execution(
+			[{ resource: 'calibration', operation: 'get', simplify: true }],
+			async () => body,
+			false,
+			2,
+		);
+		const result = (await fixture.run())[0][0].json;
+		expect(Object.keys(result)).toHaveLength(10);
+		expect(result).toMatchObject({
+			calibration_id: 'id',
+			status: 'unverified',
+			threshold: null,
+			binding: body.binding,
+		});
+		expect(result).not.toHaveProperty('grid_reports');
+	});
+	test('tool selected output retains resource identifiers and preserves false and zero', async () => {
+		const fixture = execution(
+			[
+				{
+					resource: 'calibration',
+					operation: 'get',
+					output: 'selected',
+					outputFields: ['threshold', 'status'],
+				},
+			],
+			async () => ({
+				calibration_id: 'id',
+				calibration_identity: 'identity',
+				threshold: 0,
+				status: false,
+				large_unused: 'omit',
+			}),
+			false,
+			2,
+			true,
+		);
+		expect((await fixture.run())[0][0].json).toEqual({
+			calibration_id: 'id',
+			calibration_identity: 'identity',
+			threshold: 0,
+			status: false,
+		});
+	});
+	test('simplified risk preserves outcome identity, probability ordering, and drift warning', async () => {
+		const body = {
+			model: 'pea',
+			candidate_keys: ['refund', 'replacement'],
+			candidate_index: 1,
+			decision: 'accept',
+			probabilities: [0.1, 0.9],
+			calibration_identity: 'id',
+			target_error_rate: 0.1,
+			upper_bound: 0.09,
+			drift_warning: false,
+			metadata: {},
+			usage: {},
+			sample_size: 500,
+		};
+		const fixture = execution(
+			[
+				{
+					resource: 'workflow',
+					operation: 'risk',
+					simplify: true,
+					...formDefaults(operations.find((op) => op.value === 'risk')!),
+				},
+			],
+			async () => body,
+			false,
+			2,
+		);
+		const result = (await fixture.run())[0][0].json;
+		expect(Object.keys(result)).toHaveLength(10);
+		expect(result).toMatchObject({
+			candidate_keys: body.candidate_keys,
+			candidate_index: 1,
+			probabilities: body.probabilities,
+			drift_warning: false,
+		});
+	});
+	test('feedback cleanup IDs survive simplified and selected tool outputs', async () => {
+		const body = {
+			model: 'pea',
+			feedback_ids: ['event-1'],
+			calibration_id: 'cal-1',
+			calibration_identity: 'identity',
+			status: 'unverified',
+			binding: {},
+			temperature: 1,
+			threshold: null,
+			metadata: {},
+			usage: {},
+			calibration: 'token',
+			check_report: {},
+		};
+		for (const tool of [false, true]) {
+			const fixture = execution(
+				[
+					{
+						resource: 'calibration',
+						operation: 'get',
+						simplify: true,
+						output: 'selected',
+						outputFields: ['status'],
+					},
+				],
+				async () => body,
+				false,
+				2,
+				tool,
+			);
+			const result = (await fixture.run())[0][0].json;
+			expect(result.feedback_ids).toEqual(['event-1']);
+			expect(result.calibration_id).toBe('cal-1');
+			if (!tool) expect(Object.keys(result)).toHaveLength(10);
+		}
+	});
+	test('n8n shows Simplify for normal nodes and Output controls for tools, only on version 2', () => {
+		const description = new Vej().description;
+		const values = { resource: 'calibration', operation: 'get' };
+		for (const tool of [false, true]) {
+			const context = { ...description, name: tool ? 'vejTool' : 'vej' };
+			for (const name of ['simplify', 'output']) {
+				const property = description.properties.find((item) => item.name === name)!;
+				expect(NodeHelpers.displayParameter(values, property, { typeVersion: 2 }, context)).toBe(
+					name === (tool ? 'output' : 'simplify'),
+				);
+				expect(NodeHelpers.displayParameter(values, property, { typeVersion: 1 }, context)).toBe(
+					false,
+				);
+			}
+		}
+	});
+	test('version 2 confirms deletion while version 1 keeps its empty response', async () => {
+		for (const version of [1, 2]) {
+			const fixture = execution(
+				[{ resource: 'conversation', operation: 'delete' }],
+				async () => ({ statusCode: 204, body: '' }),
+				false,
+				version,
+			);
+			expect((await fixture.run())[0][0].json).toEqual(version === 2 ? { deleted: true } : {});
+		}
+	});
+	test('credential URL failures have the item context and send no request', async () => {
+		const context = {
+			getNode: () => node,
+			getItemIndex: () => 3,
+			getCredentials: async () => ({ baseUrl: 'https://example.com/v1' }),
+		} as unknown as IExecuteSingleFunctions;
+		await expect(prepareRequest.call(context, { url: '/' })).rejects.toBeInstanceOf(
+			NodeOperationError,
+		);
 	});
 	test('credentials use encrypted n8n storage and Bearer authentication', () => {
 		const credential = new VejApi();
