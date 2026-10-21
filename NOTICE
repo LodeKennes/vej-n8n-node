@@ -17,6 +17,8 @@ The banner SVG embeds these fonts to preserve Vej typography.
 Source API revision: dedb60477c1c6b323658195ee96bc34e9e5fbe6f
 Source paths: api/openapi/v1.json and api/openapi/v1beta.json.
 Only reachable request-schema components are included in tests/contracts.
+Extraction request/response schemas in tests/contracts/extract.json derive from
+api/openapi/v1beta.json at 8ad963cb0a7c42bdab38b5efb06b208e96a677b6.
 API examples in nodes/Vej/presets.json are authored for this integration.
 
 n8n is a trademark of n8n GmbH. This package integrates with n8n; it is not

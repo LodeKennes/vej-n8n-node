@@ -1,5 +1,18 @@
 # Validation record
 
+## Extraction integration v0.4.0
+
+Validated 2026-10-21 on **db-xps-02**, Linux x86_64, in `/home/lode/Projects/Lode/vej-n8n-node`, branch `feat/extract-api`, starting at `c00d8e3`. Bun **1.4.3** and Node **24.19.0** were active. Extraction schemas match `api/openapi/v1beta.json` at Vej commit **`8ad963cb0a7c42bdab38b5efb06b208e96a677b6`**; older snapshots retain their original revision.
+
+- `bun install --frozen-lockfile`: passed without dependency changes.
+- `bun run check`: passed, including **93 tests**, strict lint, type checking, compilation, and package checks. Extraction checks cover all seven types, direct request bodies, Advanced JSON, invalid inputs, response preservation, unavailable errors, and native n8n parameter normalization. Normalization confirms the form default, hidden JSON input, and conditional numeric controls, preserving false and zero options.
+- `bun pm pack --destination artifacts` and `bun run scan:local`: passed for 0.4.0, including source and packed JavaScript scanning with inline exceptions disabled.
+- `bun run test:n8n`: passed all **34 actions** with saved version 1 JSON inputs.
+- `bun run test:n8n:package`: passed all **34 actions** from the installed tarball using version 2 forms, plus the existing per-item routing/error workflow. The extraction fixture checks the direct request body and preservation of evidence, null values, metadata, and usage.
+- `bun run examples:generate`: generated **17** inactive form-based examples, including invoice extraction.
+
+An independent read-only **Claude Sonnet 5.5** review found no blockers and confirmed schema provenance, compatibility, validation, and response preservation. Minor observations concerned empty optional units, historical review-kit versions, and extra boundary coverage. The review kit remains a 0.3.1 submission snapshot; no new submission or release tag is part of this change. Tests use local authored transport fixtures, without live inference or paid API calls. Parameter normalization and Docker execution were checked; no visual editor inspection was performed.
+
 ## CI portability patch v0.3.1
 
 The first 0.3.0 GitHub CI runs passed the 85 tests, build and source/artifact scanner, then failed during Docker credential import. A local reproduction with mismatched host/container UIDs produced `EACCES` creating the fixture's `.n8n` directory. The 0.3.1 smoke runner passes the invoking UID/GID to disposable containers, preserving fixture ownership without broadening permissions. It also includes bounded diagnostics on command failure.

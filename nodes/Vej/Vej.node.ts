@@ -294,7 +294,7 @@ export class Vej implements INodeType {
 		version: [1, 2],
 		defaultVersion: 2,
 		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
-		description: 'State in, probabilities out. Native decisions and all 11 Vej Beta workflows.',
+		description: 'Native decisions, typed extraction, and Vej Beta workflows with probabilities.',
 		defaults: { name: 'Vej' },
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],

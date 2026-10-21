@@ -313,6 +313,82 @@ export function fieldsFor(spec: Operation): INodeProperties[] {
 		);
 	const question = () => text('formQuestion', 'Question', String(input.question ?? ''), '', 3);
 	const request = input.request as IDataObject | undefined;
+	if (spec.value === 'extract')
+		return [
+			state(),
+			text(
+				'referenceDate',
+				'Reference Date',
+				'',
+				'Optional calendar date (YYYY-MM-DD) anchoring partial dates',
+			),
+			flag(
+				'returnStateText',
+				'Return State Text',
+				'Whether to include the original text in the response',
+			),
+			rows(
+				'extractFields',
+				'Fields',
+				[
+					text(
+						'name',
+						'Field Name',
+						'',
+						'Unique name: letters, digits, underscores, dots, or hyphens; start with a letter or underscore',
+					),
+					select('type', 'Type', [
+						'text',
+						'number',
+						'date',
+						'time',
+						'datetime',
+						'duration',
+						'list',
+					]),
+					text('instructions', 'Instructions', '', 'Optional guidance for this field', 3),
+					{
+						...number('nullThreshold', 'Null Threshold', 0.5),
+						typeOptions: { minValue: 0, maxValue: 1 },
+						description:
+							'Return null when the null probability reaches this threshold; must be greater than zero',
+					},
+					{
+						displayName: 'Number Options',
+						name: 'numberOptions',
+						type: 'collection',
+						default: {},
+						placeholder: 'Add Number Option',
+						displayOptions: { show: { type: ['number', 'duration'] } },
+						options: [
+							text(
+								'unit',
+								'Unit',
+								'',
+								'For durations: seconds, minutes, hours, days, weeks, months, or years',
+							),
+							flag('integer', 'Integer', 'Whether the extracted value must be an integer'),
+							{
+								...number('decimals', 'Decimals', 2),
+								typeOptions: { minValue: 0, maxValue: 6, numberPrecision: 0 },
+							},
+						],
+					},
+				],
+				'Add Field',
+				Object.entries(input.fields as IDataObject).map(([name, value]) => {
+					const { type, instructions, null_threshold, ...numberOptions } = value as IDataObject;
+					delete numberOptions.items;
+					return {
+						name,
+						type,
+						instructions: instructions ?? '',
+						nullThreshold: null_threshold ?? 0.5,
+						numberOptions,
+					};
+				}),
+			),
+		];
 	if (spec.resource === 'decision' && spec.value === 'predict')
 		return [
 			state(),

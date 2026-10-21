@@ -18,6 +18,7 @@ import { formValues } from '../nodes/Vej/form-input';
 import { prepareRequest, receiveResponse } from '../nodes/Vej/routing';
 import ga from './contracts/ga.json';
 import beta from './contracts/beta.json';
+import extract from './contracts/extract.json';
 
 const node: INode = {
 	id: 'vej-test',
@@ -31,8 +32,9 @@ const ajv = new Ajv({ strict: false, allErrors: true });
 addFormats(ajv);
 ajv.addSchema(ga, 'ga');
 ajv.addSchema(beta, 'beta');
+ajv.addSchema(extract, 'extract');
 
-function valid(document: 'ga' | 'beta', name: string, value: unknown) {
+function valid(document: 'ga' | 'beta' | 'extract', name: string, value: unknown) {
 	const validate = ajv.compile({ $ref: `${document}#/components/schemas/${name}` });
 	expect(validate(value), JSON.stringify(validate.errors)).toBe(true);
 }
@@ -91,6 +93,8 @@ describe('all published use cases and lifecycle operations', () => {
 					const body = request.body as { mode: string; input: unknown };
 					expect(body.mode).toBe(operation.mode);
 					valid('beta', schemaFor[operation.preset], body.input);
+				} else if (operation.value === 'extract') {
+					valid('extract', 'ExtractRequest', request.body);
 				} else {
 					valid(
 						'ga',
@@ -159,6 +163,7 @@ describe('version 2 form builders', () => {
 			);
 			if (operation.mode)
 				valid('beta', schemaFor[operation.preset!], (request.body as { input: unknown }).input);
+			else if (operation.value === 'extract') valid('extract', 'ExtractRequest', request.body);
 			else
 				valid(
 					'ga',
@@ -371,6 +376,165 @@ describe('version 2 form builders', () => {
 			(items[0].json.received as { questions: { result: { options: object } } }).questions.result
 				.options,
 		).toEqual({ yes: 'Proceed', no: 'Review' });
+	});
+});
+
+describe('typed extraction', () => {
+	const spec = operations.find((operation) => operation.value === 'extract')!;
+	const defaults = formDefaults(spec);
+	const request = (overrides: Record<string, unknown> = {}) => {
+		const get = params({ ...defaults, ...overrides });
+		const fields = formValues('workflow', 'extract', get);
+		return buildRequest('workflow', 'extract', (name, fallback) =>
+			name in fields ? fields[name] : get(name, fallback),
+		);
+	};
+	test('n8n defaults to visible form rows and only shows numeric options for numeric types', () => {
+		const description = new Vej().description;
+		const normalized = NodeHelpers.getNodeParameters(
+			description.properties,
+			{
+				resource: 'workflow',
+				operation: 'extract',
+				extractFields: {
+					entries: [
+						{ name: 'amount', type: 'number', numberOptions: { integer: false, decimals: 0 } },
+						{ name: 'label', type: 'text', numberOptions: { unit: 'USD' } },
+					],
+				},
+			},
+			true,
+			false,
+			{ typeVersion: 2 },
+			description,
+		)!;
+		expect(normalized.inputMode).toBe('form');
+		expect(normalized).not.toHaveProperty('input');
+		const rows = (normalized.extractFields as { entries: IDataObject[] }).entries;
+		expect(rows[0].numberOptions).toEqual({ integer: false, decimals: 0 });
+		expect(rows[1]).not.toHaveProperty('numberOptions');
+		expect(rows[1].nullThreshold).toBe(0.5);
+		valid('extract', 'ExtractRequest', request(normalized).body);
+	});
+	test('all seven types emit a direct request, preserving false and zero options', () => {
+		const types = ['text', 'number', 'date', 'time', 'datetime', 'duration', 'list'];
+		const body = request({
+			referenceDate: '2026-10-21',
+			extractFields: {
+				entries: types.map((type) => ({
+					name: type,
+					type,
+					numberOptions: { integer: false, decimals: 0 },
+				})),
+			},
+		}).body as IDataObject;
+		valid('extract', 'ExtractRequest', body);
+		expect(body).not.toHaveProperty('mode');
+		expect(body).not.toHaveProperty('input');
+		expect(body.reference_date).toBe('2026-10-21');
+		expect((body.fields as IDataObject).list).toEqual({
+			type: 'list',
+			items: 'text',
+			null_threshold: 0.5,
+		});
+		expect((body.fields as IDataObject).number).toMatchObject({ integer: false, decimals: 0 });
+		expect((body.fields as IDataObject).text).not.toHaveProperty('integer');
+	});
+	test('invalid form values fail before transport', () => {
+		for (const overrides of [
+			{ context: ' ' },
+			{ context: 'x'.repeat(65537) },
+			{ referenceDate: '2026-02-30' },
+			{ referenceDate: 'tomorrow' },
+			{ extractFields: { entries: [] } },
+			...[
+				{ name: '9bad', type: 'text' },
+				{ name: 'ok', type: 'estimate' },
+				{ name: 'ok', type: 'text', nullThreshold: 0 },
+				{ name: 'ok', type: 'text', instructions: 'x'.repeat(1001) },
+				{ name: 'ok', type: 'number', numberOptions: { decimals: 7 } },
+				{ name: 'ok', type: 'duration', numberOptions: { unit: 'USD' } },
+			].map((row) => ({ extractFields: { entries: [row] } })),
+			{
+				extractFields: {
+					entries: [
+						{ name: 'same', type: 'text' },
+						{ name: 'same', type: 'text' },
+					],
+				},
+			},
+			{
+				extractFields: {
+					entries: Array.from({ length: 65 }, (_, i) => ({ name: `f${i}`, type: 'text' })),
+				},
+			},
+		])
+			expect(() => request(overrides)).toThrow();
+	});
+	test('Advanced JSON keeps the complete native body and skips hidden form controls', () => {
+		const input = {
+			model: 'pea-pod-1',
+			state: 'No items.',
+			fields: { missing: { type: 'text' } },
+			options: { include_quantiles: false },
+		};
+		expect(request({ inputMode: 'json', input }).body).toEqual(input);
+	});
+	test('routing preserves evidence, nulls, lists, zero, usage and metadata', async () => {
+		const response = {
+			model: 'pea-pod-1',
+			truncated: false,
+			answers: {
+				missing: { type: 'text', value: null, guess: null, p_null: 1, confidence: 0 },
+				count: { type: 'number', value: 0, guess: 0, p_null: 0.1, confidence: 0.8, span: [0, 1] },
+				names: {
+					type: 'list',
+					value: ['A'],
+					guess: ['A'],
+					p_null: 0.1,
+					confidence: 0.8,
+					spans: [[2, 3]],
+				},
+			},
+			usage: {
+				state_tokens: 3,
+				image_tokens: 0,
+				schema_tokens: 3,
+				input_tokens: 12,
+				output_tokens: 0,
+				passes: 3,
+			},
+			metadata: {
+				base_checkpoint_sha256: '1'.repeat(64),
+				parts: [{ name: 'pea-pod-1', sha256: '2'.repeat(64) }],
+				render_version: 'extract_v1',
+				calibrated: false,
+				offsets: 'code_points',
+			},
+		};
+		valid('extract', 'ExtractResponse', response);
+		const fixture = execution(
+			[{ resource: 'workflow', operation: 'extract', ...defaults }],
+			async () => response,
+			false,
+			2,
+		);
+		expect((await fixture.run())[0][0]).toEqual({ json: response, pairedItem: { item: 0 } });
+		expect(fixture.requests[0].url).toBe('https://api.itsvej.com/v1beta/extract');
+		expect(fixture.requests[0].body).not.toHaveProperty('mode');
+	});
+	test('unavailable extraction remains an HTTP 503 error without retry or fallback', async () => {
+		const fixture = execution(
+			[{ resource: 'workflow', operation: 'extract', ...defaults }],
+			async () => ({ statusCode: 503, body: { error: 'extract_unavailable' } }),
+			false,
+			2,
+		);
+		await expect(fixture.run()).rejects.toMatchObject({
+			httpCode: '503',
+			description: 'extract_unavailable',
+		});
+		expect(fixture.requests).toHaveLength(1);
 	});
 });
 

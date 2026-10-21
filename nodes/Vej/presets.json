@@ -302,5 +302,24 @@
 				"output_url": "https://YOUR_APPROVED_EU_STORAGE_HOST/output.jsonl?SIGNED_PUT"
 			}
 		]
+	},
+	"extract": {
+		"model": "clairic",
+		"state": "Invoice INV-2291 from Northwind Supply. Total due: $1,080.00.",
+		"fields": {
+			"invoice_number": {
+				"type": "text",
+				"null_threshold": 0.5
+			},
+			"total": {
+				"type": "number",
+				"null_threshold": 0.5,
+				"unit": "USD",
+				"decimals": 2
+			}
+		},
+		"options": {
+			"return_state_text": false
+		}
 	}
 }
