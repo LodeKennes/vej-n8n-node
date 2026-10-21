@@ -192,7 +192,75 @@ export function formValues(
 		questionMap(get('questionBuilder'), { optional, score, effort });
 	let input: IDataObject;
 	if (resource === 'decision') input = { state: state(), questions: questions() };
-	else if (operation === 'risk') {
+	else if (operation === 'extract') {
+		const context = state();
+		if (Array.from(context).length > 65536)
+			throw new Error('Extraction state must contain at most 65536 code points.');
+		const referenceDate = text(get('referenceDate', ''), 'Reference date', true);
+		if (
+			referenceDate &&
+			(!/^\d{4}-\d{2}-\d{2}$/.test(referenceDate) ||
+				!Number.isFinite(Date.parse(referenceDate)) ||
+				new Date(referenceDate).toISOString().slice(0, 10) !== referenceDate)
+		)
+			throw new Error('Reference date must be a real calendar date in YYYY-MM-DD format.');
+		input = {
+			model: 'clairic',
+			state: context,
+			...(referenceDate ? { reference_date: referenceDate } : {}),
+			fields: map(
+				entries(get('extractFields'), 'Extraction fields', 1, 64).map((row) => {
+					const name = text(row.name, 'Field name');
+					if (!/^[A-Za-z_][A-Za-z0-9_.-]{0,63}$/.test(name))
+						throw new Error(
+							'Field names must start with a letter or underscore and contain at most 64 letters, digits, underscores, dots, or hyphens.',
+						);
+					const type = text(row.type, 'Field type');
+					if (!['text', 'number', 'date', 'time', 'datetime', 'duration', 'list'].includes(type))
+						throw new Error('Choose a supported extraction field type.');
+					const instructions = text(row.instructions ?? '', 'Instructions', true);
+					if (Array.from(instructions).length > 1000)
+						throw new Error('Instructions must contain at most 1000 code points.');
+					const threshold = number(row.nullThreshold ?? 0.5, 'Null threshold');
+					if (threshold <= 0 || threshold > 1)
+						throw new Error('Null threshold must be greater than zero and at most one.');
+					const field: IDataObject = {
+						type,
+						null_threshold: threshold,
+						...(instructions ? { instructions } : {}),
+						...(type === 'list' ? { items: 'text' } : {}),
+					};
+					if (type === 'number' || type === 'duration') {
+						const options = object(row.numberOptions ?? {}, 'Number options');
+						if (options.unit !== undefined) {
+							const unit = text(options.unit, 'Unit');
+							if (
+								Array.from(unit).length > 32 ||
+								(type === 'duration' &&
+									!['seconds', 'minutes', 'hours', 'days', 'weeks', 'months', 'years'].includes(
+										unit,
+									))
+							)
+								throw new Error(
+									'Use a unit of at most 32 code points, or a supported duration unit.',
+								);
+							field.unit = unit;
+						}
+						if (options.integer !== undefined) field.integer = boolean(options.integer, 'Integer');
+						if (options.decimals !== undefined) {
+							const decimals = number(options.decimals, 'Decimals');
+							if (!Number.isInteger(decimals) || decimals < 0 || decimals > 6)
+								throw new Error('Decimals must be an integer from zero to six.');
+							field.decimals = decimals;
+						}
+					}
+					return [name, field];
+				}),
+				'Extraction fields',
+			),
+			options: { return_state_text: boolean(get('returnStateText', false), 'Return state text') },
+		};
+	} else if (operation === 'risk') {
 		const query = questions(false, false);
 		if (Object.keys(query).length !== 1)
 			throw new Error('Target Error Rate requires exactly one Choice or Noul question.');

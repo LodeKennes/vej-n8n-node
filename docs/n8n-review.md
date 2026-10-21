@@ -1,5 +1,7 @@
 # Vej submission and reviewer guide
 
+This guide records the 0.3.1 submission candidate. The 0.4.0 source adds form-based extraction (34 actions and 17 examples); see [operations](operations.md) and [validation](validation.md). Update candidate links and submission details when preparing its release tag.
+
 Prepared for **n8n-nodes-vej 0.3.1**, checked 2026-10-19. This is a submission kit, not a claim of n8n verification. The package is prepared locally; **npm publication, registry/provenance verification, reviewer service access, and Creator Portal submission remain pending**.
 
 ## Package identity and public links

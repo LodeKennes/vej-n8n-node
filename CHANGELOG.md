@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- Add Workflow → Extract Typed Fields for `POST /v1beta/extract`, with all seven field types, repeatable form rows, number options, reference dates, and Advanced JSON.
+- Preserve extraction values, guesses, null probabilities, confidence, evidence spans, metadata, and usage; surface unavailable deployments without fallback.
+- Include an invoice extraction workflow, pinned API contracts, and real n8n transport checks.
+
 ## 0.3.1
 
 - Run disposable n8n test containers with the invoking user's UID/GID so fixture directories work on GitHub-hosted runners as well as local machines.

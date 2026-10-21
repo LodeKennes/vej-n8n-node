@@ -21,12 +21,13 @@ const examples = [
 	['14-rank-with-probabilities', 'workflow', 'rankings'],
 	['15-select-effort', 'workflow', 'effort'],
 	['16-fit-a-calibration', 'calibration', 'fit'],
+	['17-extract-typed-fields', 'workflow', 'extract'],
 ];
 for (const [filename, resource, value] of examples) {
 	const operation = operations.find((item) => item.resource === resource && item.value === value)!;
 	const note = [
 		'Choose your Vej API credential before running. This example is inactive and runs no external actions.',
-		operation.mode
+		operation.path.startsWith('/v1beta/')
 			? 'Beta: model access and deployment support are required. Read https://itsvej.com/use-cases/ for current limitations.'
 			: '',
 		resource === 'conversation'
@@ -40,6 +41,9 @@ for (const [filename, resource, value] of examples) {
 			: '',
 		value === 'effort'
 			? 'Standard executes. Fast and careful are deferred; inspect every question status.'
+			: '',
+		value === 'extract'
+			? 'Requires the separate pea-pod-1 extraction deployment; otherwise extract_unavailable. Read answers.<name>.value, guess, p_null, confidence, and span/spans. Probabilities are uncalibrated; offsets count Unicode code points.'
 			: '',
 	]
 		.filter(Boolean)

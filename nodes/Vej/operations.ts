@@ -26,6 +26,16 @@ export type Operation = {
 
 export const operations: Operation[] = [
 	{
+		resource: 'workflow',
+		value: 'extract',
+		name: 'Extract Typed Fields',
+		action: 'Extract typed fields',
+		description: 'Extract text, numbers, dates, times, durations, and lists with source evidence',
+		method: 'POST',
+		path: '/v1beta/extract',
+		preset: 'extract',
+	},
+	{
 		resource: 'decision',
 		value: 'choice',
 		name: 'Choose an Outcome',

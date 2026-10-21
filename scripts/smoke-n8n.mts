@@ -60,6 +60,40 @@ const server = Bun.serve({
 				{ status: 429 },
 			);
 		if (request.method === 'DELETE') return new Response(null, { status: 204 });
+		if (url.pathname === '/v1beta/extract') {
+			if (
+				body.model !== 'clairic' ||
+				!body.fields?.invoice_number ||
+				!body.fields?.total ||
+				'mode' in body ||
+				'input' in body
+			)
+				return Response.json({ detail: 'Expected a direct extraction request' }, { status: 400 });
+			return Response.json({
+				model: 'pea-pod-1',
+				answers: {
+					invoice_number: {
+						type: 'text',
+						value: 'INV-2291',
+						guess: 'INV-2291',
+						p_null: 0.1,
+						confidence: 0.8,
+						span: [8, 16],
+					},
+					total: {
+						type: 'number',
+						value: null,
+						guess: 1080,
+						p_null: 0.8,
+						confidence: 0.7,
+						span: [51, 60],
+					},
+				},
+				truncated: false,
+				metadata: { fixture_only: true, calibrated: false, offsets: 'code_points' },
+				usage: { input_tokens: 100, output_tokens: 0, passes: 2 },
+			});
+		}
 		return Response.json({
 			model: 'pea',
 			id,
@@ -240,6 +274,14 @@ try {
 			const item =
 				run.data.resultData.runData[`${operation.resource}-${operation.value}`][0].data.main[0][0];
 			if (item.pairedItem?.item !== 0) throw new Error('Missing output item pairing.');
+			if (
+				operation.value === 'extract' &&
+				(item.json.answers.invoice_number.span[0] !== 8 ||
+					item.json.answers.total.value !== null ||
+					item.json.metadata.calibrated !== false ||
+					item.json.usage.output_tokens !== 0)
+			)
+				throw new Error('Extraction output lost evidence, null values, metadata, or usage.');
 			if (operation.method === 'DELETE') {
 				if (forms ? item.json.deleted !== true : Object.keys(item.json).length !== 0)
 					throw new Error('Deletion output did not preserve the expected node-version behavior.');

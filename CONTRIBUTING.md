@@ -7,7 +7,7 @@ bun install --frozen-lockfile
 bun run check
 ```
 
-`nodes/Vej/operations.ts` defines the 33 actions and routes. `presets.json` contains authored input examples. `forms.ts` defines native form fields; `form-input.ts` assembles their typed values. `request.ts` validates requests; `Vej.node.ts` declares the UI and declarative routing. `routing.ts` supplies request/response hooks and version compatibility. `credentials/VejApi.credentials.ts` owns authentication.
+`nodes/Vej/operations.ts` defines the 34 actions and routes. `presets.json` contains authored input examples. `forms.ts` defines native form fields; `form-input.ts` assembles their typed values. `request.ts` validates requests; `Vej.node.ts` declares the UI and declarative routing. `routing.ts` supplies request/response hooks and version compatibility. `credentials/VejApi.credentials.ts` owns authentication.
 
 API additions need a matching operation, useful input default, request-contract test, example, and documentation. Preserve response metadata and usage; keep unavailable and abstained results visible. Never enable retention as an inference side effect or retry state writes automatically. Model quality claims need their own measured evidence.
 

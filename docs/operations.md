@@ -1,6 +1,6 @@
 # Operations and use cases
 
-The **Vej** node exposes 33 actions through n8n's declarative REST routing. Each successful input item produces one paired output item containing the complete API response. Version 2 deletion actions add `deleted: true`; version 1 preserves empty responses as `{}`. Errors fail the node unless n8n's **On Error → Continue** is selected; n8n handles continued errors and retains the originating item link. No automatic retries are configured.
+The **Vej** node exposes 34 actions through n8n's declarative REST routing. Each successful input item produces one paired output item containing the complete API response. Version 2 deletion actions add `deleted: true`; version 1 preserves empty responses as `{}`. Errors fail the node unless n8n's **On Error → Continue** is selected; n8n handles continued errors and retains the originating item link. No automatic retries are configured.
 
 ## Native decisions
 
@@ -16,6 +16,16 @@ All four actions call `POST /v1/predict`:
 | Predict Multiple Questions | State and repeatable Choice/Noul/Score questions | `answers.<your_question_id>` |
 
 The guided actions use `result` as the default question ID; changing it changes the output path. Text and structured JSON state are supported. Names/descriptions are semantic inputs. Questions are independent, and Score uses zero-based indices. The node does not reinterpret scores as probabilities or combine marginal probabilities into a joint confidence.
+
+## Typed extraction (Beta)
+
+**Workflow → Extract Typed Fields** calls `POST /v1beta/extract`. Enter text in **State** and use **Add Field** to name each field and choose `text`, `number`, `date`, `time`, `datetime`, `duration`, or `list` (text items). Optional instructions describe each field. **Number Options** supports units, integer values, and 0–6 decimal places; duration units are seconds, minutes, hours, days, weeks, months, or years (seconds by default). **Reference Date** optionally anchors partial dates using a real `YYYY-MM-DD` date. **Return State Text** includes the source in the response.
+
+The form selects the Clairic-compatible model alias `clairic`. **Advanced JSON** accepts the complete extraction request, including `model`, text `state`, and a named `fields` object. This endpoint uses no `mode`/`input` wrapper. Import [the invoice workflow](../examples/17-extract-typed-fields.json) to start.
+
+Read `answers.<field>.value` for the accepted value, `guess` for the candidate, `p_null` for the null probability, and `confidence` for candidate confidence. The null threshold defaults to 0.5; the API can return a null value while preserving a guess and its evidence. These probabilities are uncalibrated. All response fields remain intact, including `span`/`spans`, `truncated`, metadata, and usage. Evidence uses Unicode code-point offsets with exclusive ends; use `Array.from(state).slice(start, end).join('')` in JavaScript.
+
+Extraction requires inference scope and a configured separate pea-pod-1 server. Unconfigured deployments return HTTP 503 `extract_unavailable`; the node surfaces that error without retries or fallback. Up to 64 independent fields and 65,536 state code points are accepted; the server also enforces 2,048 tokens per rendered field and refuses oversized input instead of truncating. Images, nested records, number/date lists, estimates, and forecasts are unsupported. The API retains no extraction content; n8n execution storage follows your own instance settings.
 
 ## Output controls
 

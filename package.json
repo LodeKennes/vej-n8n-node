@@ -1,7 +1,7 @@
 {
 	"name": "n8n-nodes-vej",
-	"version": "0.3.1",
-	"description": "State in, probabilities out. Native decisions and all 11 Vej Beta workflows for n8n.",
+	"version": "0.4.0",
+	"description": "Native decisions, typed extraction, and Vej Beta workflows for n8n.",
 	"license": "MIT",
 	"homepage": "https://github.com/LodeKennes/vej-n8n-node#readme",
 	"keywords": [

@@ -11,7 +11,7 @@
 
 Route a request. Check a document. Match a record. Keep the probabilities.
 
-**`n8n-nodes-vej` brings Vej's native decisions and all 11 published Beta workflows into n8n.** Define the outcomes and questions; Vej returns numerical probabilities. Connect the results to your existing Switch, IF, review, and storage steps.
+**`n8n-nodes-vej` brings Vej's native decisions, typed extraction, and all 11 published Beta workflows into n8n.** Define the outcomes and questions; Vej returns numerical probabilities. Connect the results to your existing Switch, IF, review, and storage steps.
 
 ![Vej for n8n — define the outcomes, connect your next step](assets/banner.png)
 
@@ -20,11 +20,12 @@ Route a request. Check a document. Match a record. Keep the probabilities.
 ## What you can build
 
 - **A decision step:** Choice selects among named outcomes; Noul assesses a statement; Score assesses rubric levels. Send several independent questions in one native request.
+- **Typed extraction:** extract text, numbers, dates, times, durations, and text lists with source evidence using **Workflow → Extract Typed Fields**. Import [the invoice example](examples/17-extract-typed-fields.json).
 - **A document review:** identify source evidence, label document segments, and estimate quantities over your own value bins.
 - **A workflow with context:** evaluate conversation history, ask conditional questions, match supplied records, and resume checks when someone supplies missing information.
 - **A review queue:** apply a fitted risk threshold, use reviewed corrections for recalibration, or inspect ranking probabilities.
 
-The package has **33 actions across eight resources**, light and dark Vej icons, credential testing, per-item expressions, and paired outputs. **Build requests with forms:** add outcomes, questions, rubric levels, sources, records, segments, checks, and reviewed labels using repeatable rows. Every API response keeps its probabilities, statuses, metadata, and usage.
+The package has **34 actions across eight resources**, light and dark Vej icons, credential testing, per-item expressions, and paired outputs. **Build requests with forms:** add outcomes, questions, rubric levels, sources, records, segments, checks, and reviewed labels using repeatable rows. Every API response keeps its probabilities, statuses, metadata, and usage.
 
 Advanced JSON is optional for bulk data and full native payloads. Existing version 1 nodes retain their saved JSON behavior; newly added nodes use the version 2 form builder.
 
